@@ -1,0 +1,23 @@
+{
+  "name": "city-pulse-backend",
+  "version": "1.0.0",
+  "description": "ExpressJS backend for CityPulse",
+  "homepage": "https://github.com/Job-Hunters-G08-Proiect-Colectiv/CityPulse#readme",
+  "bugs": {
+    "url": "https://github.com/Job-Hunters-G08-Proiect-Colectiv/CityPulse/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Job-Hunters-G08-Proiect-Colectiv/CityPulse.git"
+  },
+  "license": "ISC",
+  "author": "Afloarei Codrin",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}
