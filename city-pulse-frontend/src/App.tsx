@@ -112,7 +112,7 @@ function App() {
     return matchesSearch && matchesCategory && matchesStatus && matchesSeverity;
   });
 
-  const handleCreateReport = (reportData: any) => {
+  const handleCreateReport = (reportData: Omit<Report, 'id' | 'date' | 'status' | 'upvotes'>) => {
     const newReport: Report = {
       id: Date.now().toString(),
       ...reportData,

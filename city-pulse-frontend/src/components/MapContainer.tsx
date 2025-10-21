@@ -1,10 +1,6 @@
 import './MapContainer.css';
 
-interface MapContainerProps {
-  // add props as needed for map functionality
-}
-
-const MapContainer = (props: MapContainerProps) => {
+const MapContainer = () => {
   return (
     <div className="map-container">
       <div className="map-placeholder">

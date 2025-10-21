@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { X } from 'lucide-react';
-import type { ReportCategory, SeverityLevel } from '../types/report';
+import type { Report, ReportCategory, SeverityLevel } from '../types/report';
 import './CreateReportModal.css';
 
 interface CreateReportModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: any) => void;
+  onSubmit: (data: Omit<Report, 'id' | 'date' | 'status' | 'upvotes'>) => void;
 }
 
 const CreateReportModal = ({ isOpen, onClose, onSubmit }: CreateReportModalProps) => {
