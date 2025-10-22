@@ -1,5 +1,6 @@
 const CATEGORIES = ["POTHOLE", "WASTE", "POLLUTION", "PUBLIC_LIGHTING", "OTHER"];
 const SEVERITIES = ["LOW", "MEDIUM", "HIGH", "CRITICAL"];
+const STATUSES = ["REPORTED", "WORKING", "DONE", "PLANNING"];
 
 class Report {
     constructor(name, location, category, severity_level) {
@@ -17,5 +18,6 @@ class Report {
 module.exports = {
     Report,
     CATEGORIES,
-    SEVERITIES
+    SEVERITIES,
+    STATUSES
 };

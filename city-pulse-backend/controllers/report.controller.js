@@ -13,6 +13,40 @@ const httpGetAllReports = (req, res) => {
     }
 };
 
+const httpGetReportById = (req, res) => {
+    const id = parseInt(req.params.id, 10);
+    console.log(`Controller: GET /api/reports/${id}`);
+    
+    try {
+        const report = reportService.getReportById(id);
+        res.status(200).json(report);
+    } catch (error) {
+        if (error.message === 'Report not found') {
+            return res.status(404).json({ error: error.message });
+        }
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+
+const httpUpdateReport = (req, res) => {
+    const id = parseInt(req.params.id, 10);
+    const dataToUpdate = req.body;
+    console.log(`Controller: PUT /api/reports/${id}`);
+
+    try {
+        const updatedReport = reportService.updateReport(id, dataToUpdate);
+        res.status(200).json(updatedReport);
+    } catch (error) {
+        if (error.message.includes('Invalid')) {
+            return res.status(400).json({ error: error.message });
+        }
+        if (error.message === 'Report not found') {
+            return res.status(404).json({ error: error.message });
+        }
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+
 const httpAddNewReport = (req, res) => {
     console.log('Controller: POST /api/reports');
 
@@ -50,5 +84,7 @@ const httpDeleteReport = (req, res) => {
 module.exports = {
     httpGetAllReports,
     httpAddNewReport,
-    httpDeleteReport
+    httpDeleteReport,
+    httpGetReportById,
+    httpUpdateReport
 };

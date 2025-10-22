@@ -45,6 +45,23 @@ const findById = (id) => {
     return reports.find(report => report.id === id);
 };
 
+const updateById = (id, dataToUpdate) => {
+    const reportIndex = reports.findIndex(report => report.id === id);
+    if (reportIndex === -1) {
+        return null;
+    }
+
+    // keeping original report to allow partial updates
+    const originalReport = reports[reportIndex];
+    const updatedReport = { 
+        ...originalReport, 
+        ...dataToUpdate    
+    };
+
+    reports[reportIndex] = updatedReport;
+    return updatedReport;
+};
+
 const create = (reportModel) => {
     reportModel.id = nextId++;
     reportModel.date = new Date().toISOString();
@@ -67,5 +84,6 @@ module.exports = {
     findAll,
     findById,
     create,
-    deleteById
+    deleteById,
+    updateById
 };

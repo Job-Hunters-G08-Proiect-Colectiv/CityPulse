@@ -1,8 +1,38 @@
 const reportRepository = require('../repositories/report.repository');
-const { Report, CATEGORIES, SEVERITIES } = require('../domain/report.domain');
+const { Report, CATEGORIES, SEVERITIES, STATUSES } = require('../domain/report.domain');
 
 const getAllReports = (filters = {}) => {
     return reportRepository.findAll(filters);
+};
+
+const getReportById = (id) => {
+    const report = reportRepository.findById(id);
+
+    if (!report) {
+        throw new Error('Report not found');
+    }
+    return report;
+};
+
+const updateReport = (id, dataToUpdate) => {
+    console.log(`Service: Actualizez sesizarea ${id}`);
+
+    if (dataToUpdate.status && !STATUSES.includes(dataToUpdate.status)) {
+        throw new Error(`Invalid status. Must be one of: ${STATUSES.join(', ')}`);
+    }
+    if (dataToUpdate.category && !CATEGORIES.includes(dataToUpdate.category)) {
+        throw new Error(`Invalid category. Must be one of: ${CATEGORIES.join(', ')}`);
+    }
+    if (dataToUpdate.severity_level && !SEVERITIES.includes(dataToUpdate.severity_level)) {
+        throw new Error(`Invalid severity level. Must be one of: ${SEVERITIES.join(', ')}`);
+    }
+
+    const updatedReport = reportRepository.updateById(id, dataToUpdate);
+
+    if (!updatedReport) {
+        throw new Error('Report not found');
+    }
+    return updatedReport;
 };
 
 const addNewReport = (reportData) => {
@@ -39,5 +69,7 @@ const deleteReport = (id) => {
 module.exports = {
     getAllReports,
     addNewReport,
-    deleteReport
+    deleteReport,
+    getReportById,
+    updateReport
 };
