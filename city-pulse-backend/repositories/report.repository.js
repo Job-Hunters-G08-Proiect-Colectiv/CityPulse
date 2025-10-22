@@ -4,6 +4,8 @@ let reports = [
         name: "Gropă mare pe Calea Moților",
         date: "2025-10-20T10:00:00Z",
         location: { lat: 46.7685, lng: 23.5862 }, 
+        address: "Calea Moților, nr. 5, Cluj-Napoca",
+        images: [],
         category: "POTHOLE",
         status: "REPORTED", 
         severity_level: "HIGH" 
@@ -13,6 +15,8 @@ let reports = [
         name: "Gunoi neridicat în Mărăști",
         date: "2025-10-19T14:30:00Z",
         location: { lat: 46.7788, lng: 23.6120 },
+        address: "Piața Mărăști, vis-a-vis de Lidl",
+        images: [],
         category: "WASTE",
         status: "REPORTED",
         severity_level: "MEDIUM"
