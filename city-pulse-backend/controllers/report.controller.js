@@ -1,9 +1,12 @@
 const reportService = require('../services/report.service');
 
 const httpGetAllReports = (req, res) => {
-    console.log('Controller: GET /api/reports');
+    const filters = req.query; 
+    
+    console.log('Controller: GET /api/reports with filters:', filters);
+    
     try {
-        const allReports = reportService.getAllReports();
+        const allReports = reportService.getAllReports(filters); 
         res.status(200).json(allReports);
     } catch (error) {
         res.status(500).json({ error: 'Server error' });

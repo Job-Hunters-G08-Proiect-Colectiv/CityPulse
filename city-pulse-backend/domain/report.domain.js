@@ -1,6 +1,3 @@
-// models/report.model.js
-
-// Importăm ENUM-urile ca să le putem valida
 const CATEGORIES = ["POTHOLE", "WASTE", "POLLUTION", "PUBLIC_LIGHTING", "OTHER"];
 const SEVERITIES = ["LOW", "MEDIUM", "HIGH", "CRITICAL"];
 

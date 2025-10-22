@@ -1,8 +1,8 @@
 const reportRepository = require('../repositories/report.repository');
 const { Report, CATEGORIES, SEVERITIES } = require('../domain/report.domain');
 
-const getAllReports = () => {
-    return reportRepository.findAll();
+const getAllReports = (filters = {}) => {
+    return reportRepository.findAll(filters);
 };
 
 const addNewReport = (reportData) => {

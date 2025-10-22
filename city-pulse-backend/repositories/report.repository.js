@@ -21,8 +21,24 @@ let reports = [
 let nextId = 3;
 
 // Copy of the reports
-const findAll = () => {
-    return [...reports]; 
+const findAll = (filters = {}) => {
+    const { category, status, severity } = filters;
+
+    let filteredReports = [...reports]; 
+
+    if (category) {
+        filteredReports = filteredReports.filter(report => report.category === category);
+    }
+
+    if (status) {
+        filteredReports = filteredReports.filter(report => report.status === status);
+    }
+
+    if (severity) {
+        filteredReports = filteredReports.filter(report => report.severity_level === severity);
+    }
+    
+    return filteredReports; 
 };
 
 const findById = (id) => {
