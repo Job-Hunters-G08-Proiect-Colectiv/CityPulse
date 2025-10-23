@@ -7,8 +7,10 @@ let reports = [
         address: "Calea Moților, nr. 5, Cluj-Napoca",
         images: [],
         category: "POTHOLE",
-        status: "REPORTED", 
-        severity_level: "HIGH" 
+        status: "PENDING", 
+        severityLevel: "HIGH",
+        upvotes: 12,
+        description: "Gropă periculoasă care afectează traficul"
     },
     {
         id: 2,
@@ -18,15 +20,17 @@ let reports = [
         address: "Piața Mărăști, vis-a-vis de Lidl",
         images: [],
         category: "WASTE",
-        status: "REPORTED",
-        severity_level: "MEDIUM"
+        status: "PENDING",
+        severityLevel: "MEDIUM",
+        upvotes: 8,
+        description: "Gunoiul se acumulează de câteva zile"
     }
 ];
 let nextId = 3;
 
 // Copy of the reports
 const findAll = (filters = {}) => {
-    const { category, status, severity } = filters;
+    const { category, status, severity, search } = filters;
 
     let filteredReports = [...reports]; 
 
@@ -39,7 +43,17 @@ const findAll = (filters = {}) => {
     }
 
     if (severity) {
-        filteredReports = filteredReports.filter(report => report.severity_level === severity);
+        filteredReports = filteredReports.filter(report => report.severityLevel === severity);
+    }
+
+    // search functionality
+    if (search) {
+        const searchLower = search.toLowerCase();
+        filteredReports = filteredReports.filter(report => 
+            report.name.toLowerCase().includes(searchLower) ||
+            report.address.toLowerCase().includes(searchLower) ||
+            (report.description && report.description.toLowerCase().includes(searchLower))
+        );
     }
     
     return filteredReports; 

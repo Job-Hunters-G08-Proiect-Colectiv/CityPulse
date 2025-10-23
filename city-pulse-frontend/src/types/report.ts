@@ -10,9 +10,9 @@ export interface Location {
 }
 
 export interface Report {
-  id: string;
+  id: number;
   name: string;
-  date: Date;
+  date: string;
   location: Location;
   address: string;
   category: ReportCategory;

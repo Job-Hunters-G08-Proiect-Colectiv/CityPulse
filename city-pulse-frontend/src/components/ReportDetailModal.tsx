@@ -7,7 +7,7 @@ interface ReportDetailModalProps {
   report: Report | null;
   isOpen: boolean;
   onClose: () => void;
-  onUpvote?: (reportId: string) => void;
+  onUpvote?: (reportId: number) => void;
 }
 
 const ReportDetailModal = ({ report, isOpen, onClose, onUpvote }: ReportDetailModalProps) => {
@@ -15,7 +15,7 @@ const ReportDetailModal = ({ report, isOpen, onClose, onUpvote }: ReportDetailMo
 
   if (!isOpen || !report) return null;
 
-  const formatDate = (date: Date) => {
+  const formatDate = (date: string) => {
     return new Intl.DateTimeFormat('en-US', { 
       weekday: 'long',
       year: 'numeric',

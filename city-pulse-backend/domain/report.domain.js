@@ -1,25 +1,27 @@
-const CATEGORIES = ["POTHOLE", "WASTE", "POLLUTION", "PUBLIC_LIGHTING", "OTHER"];
+const CATEGORIES = ["POTHOLE", "WASTE", "POLLUTION", "LIGHTING", "VANDALISM", "OTHER"];
 const SEVERITIES = ["LOW", "MEDIUM", "HIGH", "CRITICAL"];
-const STATUSES = ["REPORTED", "WORKING", "DONE", "PLANNING"];
+const STATUSES = ["PENDING", "WORKING", "PLANNING", "DONE"];
 
 class Report {
-    constructor(name, location, category, severity_level, address, images) {
+    constructor(name, location, category, severityLevel, address, images, description) {
         this.name = name;
         this.location = location;
         this.category = category;
-        this.severity_level = severity_level;
+        this.severityLevel = severityLevel;
         this.address = address;
         this.images = images || [];
+        this.description = description || "";
 
         this.id = null;
         this.date = null;
-        this.status = "REPORTED";
+        this.status = "PENDING";
+        this.upvotes = 0;
     }
 }
 
 module.exports = {
-    Report,
-    CATEGORIES,
-    SEVERITIES,
+    Report,
+    CATEGORIES,
+    SEVERITIES,
     STATUSES
 };

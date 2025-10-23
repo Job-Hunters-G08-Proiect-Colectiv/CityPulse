@@ -23,7 +23,7 @@ const updateReport = (id, dataToUpdate) => {
     if (dataToUpdate.category && !CATEGORIES.includes(dataToUpdate.category)) {
         throw new Error(`Invalid category. Must be one of: ${CATEGORIES.join(', ')}`);
     }
-    if (dataToUpdate.severity_level && !SEVERITIES.includes(dataToUpdate.severity_level)) {
+    if (dataToUpdate.severityLevel && !SEVERITIES.includes(dataToUpdate.severityLevel)) {
         throw new Error(`Invalid severity level. Must be one of: ${SEVERITIES.join(', ')}`);
     }
 
@@ -44,7 +44,7 @@ const updateReport = (id, dataToUpdate) => {
 
 const addNewReport = (reportData) => {
     console.log('Service: Adding and verifying new report');
-    const { name, location, category, severity_level, address, images } = reportData;
+    const { name, location, category, severityLevel, address, images, description } = reportData;
     
     if (!name || name.trim() === "") {
         throw new Error('New report name required.');
@@ -55,17 +55,17 @@ const addNewReport = (reportData) => {
     if (!category || !CATEGORIES.includes(category)) {
         throw new Error(`Invalid category. Must be one of: ${CATEGORIES.join(', ')}`);
     }
-    if (!severity_level || !SEVERITIES.includes(severity_level)) {
+    if (!severityLevel || !SEVERITIES.includes(severityLevel)) {
         throw new Error(`Severity level invalid. Must be one of: ${SEVERITIES.join(', ')}`);
     }
     if (!address || address.trim() === "") {
-        throw new Error('Address is a required field.');
-    }
+        throw new Error('Address is a required field.');
+    }
     if (images && !Array.isArray(images)) {
-        throw new Error('Images variable should be an array!');
-    }
+        throw new Error('Images variable should be an array!');
+    }
     
-    const reportModel = new Report(name, location, category, severity_level, address, images);
+    const reportModel = new Report(name, location, category, severityLevel, address, images, description);
 
     return reportRepository.create(reportModel);
 };

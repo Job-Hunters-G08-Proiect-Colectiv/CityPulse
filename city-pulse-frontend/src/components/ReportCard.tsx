@@ -18,7 +18,7 @@ const getSeverityColor = (severity: SeverityLevel): string => {
 };
 
 const ReportCard = ({ report, onClick }: ReportCardProps) => {
-  const formatDate = (date: Date) => {
+  const formatDate = (date: string) => {
     return new Intl.DateTimeFormat('en-US', { 
       month: 'short', 
       day: 'numeric',
