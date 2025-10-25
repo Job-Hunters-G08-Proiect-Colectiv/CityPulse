@@ -16,14 +16,14 @@
   align-items: center;
   justify-content: center;
   color: white;
-  padding: 40px;
+  /* padding: 40px; */
 }
 
-@media (max-width: 768px) {
+/* @media (max-width: 768px) {
   .map-placeholder {
     padding: 20px;
   }
-}
+} */
 
 .map-placeholder h3 {
   font-size: 32px;
