@@ -37,7 +37,7 @@ const MapView = ({ reports, onReportClick }: MapViewProps) => {
         <Marker
           key={report.id}
           position={[report.location.lat, report.location.lng]}
-          ref={(ref) => (markerRefs.current[report.id] = ref)}
+          ref={(ref) => void (markerRefs.current[report.id] = ref)}
           eventHandlers={{
             mouseover: () => {
               if (markerRefs.current[report.id]) {
