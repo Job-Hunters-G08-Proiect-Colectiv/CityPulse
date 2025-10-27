@@ -6,20 +6,14 @@ import {
   ZoomControl,
   useMap,
 } from "react-leaflet";
-import { ThumbsUp } from "lucide-react";
+import { ThumbsUp, ChevronLeft, ChevronRight } from 'lucide-react';
 import "./MapView.css";
 import type { LatLngExpression } from "leaflet";
 import L from "leaflet";
 import "leaflet.heat";
-import { severityToIntensity, type Report } from "../types/report";
-import { useRef, useState, useEffect } from "react";
-import { ThumbsUp, ChevronLeft, ChevronRight } from 'lucide-react';
-import "./MapView.css";
-import { type LatLngExpression } from "leaflet";
 import MarkerClusterGroup from "react-leaflet-markercluster";
-import L from "leaflet";
-import type { Report } from "../types/report";
 import { useEffect, useRef, useState } from "react";
+import { severityToIntensity, type Report } from "../types/report";
 import { getSeverityColor, getIconSize, getGlowRadius, getCategoryIcon } from "../utils/reportUtils";
 
 interface MapViewProps {
@@ -248,32 +242,14 @@ const MapView = ({ reports, onReportClick }: MapViewProps) => {
   );
 
   return (
-    <MapContainer
-      center={position}
-      zoom={13}
-      id="map"
-      zoomControl={false}
-      doubleClickZoom={false}
-    >
-      <div
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          zIndex: 400,
-          pointerEvents: "none",
-        }}
-      />
-
-    <MapContainer center={position} minZoom={12} zoom={13} id="map" zoomControl={false} maxBounds={maxBounds}>
+    <MapContainer center={position} minZoom={12} zoom={13} id="map" zoomControl={false} maxBounds={maxBounds} doubleClickZoom={false}>
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution="OpenStreetMap contributors"
       />
 
       <ZoomControl position="topright" />
+      center={position}
 
       <div
         className="leaflet-top leaflet-right"
@@ -300,64 +276,25 @@ const MapView = ({ reports, onReportClick }: MapViewProps) => {
       {showHeatmap ? (
         <HeatmapLayer points={heatPoints} />
       ) : (
-        reports.map((report) => (
-          <Marker
-            key={report.id}
-            position={[report.location.lat, report.location.lng]}
-            ref={(ref) => {
-              markerRefs.current[report.id] = ref;
-            }}
-            eventHandlers={{
-              mouseover: () => {
-                if (markerRefs.current[report.id]) {
-                  markerRefs.current[report.id].openPopup();
-                }
-              },
-              mouseout: () => {
-                if (markerRefs.current[report.id]) {
-                  markerRefs.current[report.id].closePopup();
-                }
-              },
-              click: () => {
-                onReportClick(report);
-              },
-            }}
-          >
-            <Popup>
-              <b>{report.name}</b>
-              <br />
-              Category: {report.category}
-              <br />
-              Severity: {report.severityLevel}.
-              <br />
-              <div
-                style={{ display: "flex", alignItems: "center", gap: "5px" }}
-              >
-                <ThumbsUp size={16} /> {report.upvotes}
-              </div>
-            </Popup>
-          </Marker>
-        ))
-      )}
-      <MarkerClusterGroup>
-        {reports.map((report) => {
-          const currentIndex = currentImageIndex[report.id] || 0; // Get current image index for this report
+        <MarkerClusterGroup>
+          {reports.map((report) => {
+            const currentIndex = currentImageIndex[report.id] || 0; // Get current image index for this report
 
-          return (
-            <Marker
-            key={report.id}
-            position={[report.location.lat, report.location.lng]}
-            icon={createCustomIcon(report)}
-            ref={(ref) => void (markerRefs.current[report.id] = ref)}
-            eventHandlers={{
-              mouseover: () => handleMarkerMouseOver(report.id),
-              mouseout: () => handleMarkerMouseOut(report.id),
-              click: () => {
-                onReportClick(report)
-              },
-            }}
-          >
-            <Popup maxWidth={300} minWidth={250}>
+            return (
+              <Marker
+              key={report.id}
+              position={[report.location.lat, report.location.lng]}
+              icon={createCustomIcon(report)}
+              ref={(ref) => void (markerRefs.current[report.id] = ref)}
+              eventHandlers={{
+                mouseover: () => handleMarkerMouseOver(report.id),
+                mouseout: () => handleMarkerMouseOut(report.id),
+                click: () => {
+                  onReportClick(report)
+                },
+              }}
+            >
+              <Popup maxWidth={300} minWidth={250}>
                 <div style={{ padding: '8px' }}
                     onMouseEnter={handlePopupMouseEnter}
                     onMouseLeave={() => handlePopupMouseLeave(report.id)}>
@@ -383,11 +320,12 @@ const MapView = ({ reports, onReportClick }: MapViewProps) => {
                     <ThumbsUp size={16} /> {report.upvotes}
                   </div>
                 </div>
-            </Popup>
-          </Marker>
-          )
-        })}
-      </MarkerClusterGroup>
+              </Popup>
+            </Marker>
+            )
+          })}
+        </MarkerClusterGroup>
+      )}
     </MapContainer>
   );
 };
