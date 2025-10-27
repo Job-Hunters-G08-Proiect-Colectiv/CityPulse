@@ -113,7 +113,6 @@ function App() {
   if (loading && reports.length === 0) {
     return (
       <div className="app">
-        <MapContainer />
         <div style={{ 
           position: 'absolute', 
           top: '50%', 
@@ -130,7 +129,7 @@ function App() {
 
   return (
     <div className="app">
-      <MapContainer />
+      <MapContainer reports={reports} onReportClick={handleReportClick} />
       
       {/* Show refreshing indicator without unmounting UI */}
       {isRefreshing && (

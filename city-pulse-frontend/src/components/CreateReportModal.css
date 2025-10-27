@@ -371,3 +371,28 @@ form {
   background: #93c5fd;
   cursor: not-allowed;
 }
+
+.address-suggestions {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.address-suggestions li {
+  padding: 12px;
+  cursor: pointer;
+  font-size: 14px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.address-suggestions li:last-child {
+  border-bottom: none;
+}
+
+.address-suggestions li:hover {
+  background: #f0f7ff;
+}

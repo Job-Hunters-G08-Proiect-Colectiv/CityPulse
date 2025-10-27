@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import type { Report, ReportCategory, SeverityLevel } from '../types/report';
 import './CreateReportModal.css';
@@ -7,6 +7,21 @@ interface CreateReportModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: Omit<Report, 'id' | 'date' | 'status' | 'upvotes'>) => void;
+}
+
+interface NominatimResult {
+  place_id: number;
+  licence: string;
+  osm_type: string;
+  osm_id: number;
+  boundingbox: [string, string, string, string];
+  lat: string;
+  lon: string;
+  display_name: string;
+  class: string;
+  type: string;
+  importance: number;
+  icon?: string;
 }
 
 const CreateReportModal = ({ isOpen, onClose, onSubmit }: CreateReportModalProps) => {
@@ -19,6 +34,30 @@ const CreateReportModal = ({ isOpen, onClose, onSubmit }: CreateReportModalProps
     description: ''
   });
   const [images, setImages] = useState<string[]>([]);
+  const [addressSuggestions, setAddressSuggestions] = useState<NominatimResult[]>([]);
+
+  useEffect(() => {
+    if (formData.address.length > 2) {
+      const delayDebounceFn = setTimeout(() => {
+        const fetchSuggestions = async () => {
+          try {
+            const response = await fetch(
+              `https://nominatim.openstreetmap.org/search?q=${formData.address}&format=json&limit=5`
+            );
+            const data = await response.json();
+            setAddressSuggestions(data);
+          } catch (error) {
+            console.error('Error fetching address suggestions:', error);
+          }
+        };
+        fetchSuggestions();
+      }, 500);
+
+      return () => clearTimeout(delayDebounceFn);
+    } else {
+      setAddressSuggestions([]);
+    }
+  }, [formData.address]);
 
   if (!isOpen) return null;
 
@@ -48,6 +87,18 @@ const CreateReportModal = ({ isOpen, onClose, onSubmit }: CreateReportModalProps
 
   const removeImage = (index: number) => {
     setImages(images.filter((_, i) => i !== index));
+  };
+
+  const handleSuggestionClick = (suggestion: NominatimResult) => {
+    setFormData({
+      ...formData,
+      address: suggestion.display_name,
+      location: {
+        lat: parseFloat(suggestion.lat),
+        lng: parseFloat(suggestion.lon),
+      },
+    });
+    setAddressSuggestions([]);
   };
 
   return (
@@ -116,6 +167,15 @@ const CreateReportModal = ({ isOpen, onClose, onSubmit }: CreateReportModalProps
                 placeholder="Street address, City, State ZIP"
                 required
               />
+              {addressSuggestions.length > 0 && (
+                <ul className="address-suggestions">
+                  {addressSuggestions.map((suggestion) => (
+                    <li key={suggestion.place_id} onClick={() => handleSuggestionClick(suggestion)}>
+                      {suggestion.display_name}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
 
             <div className="form-group">

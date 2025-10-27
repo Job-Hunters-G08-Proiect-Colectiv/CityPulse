@@ -1,12 +1,17 @@
 import "./MapContainer.css";
 import MapView from "./MapView";
-const MapContainer = () => {
+import type { Report } from "../types/report";
+
+interface MapContainerProps {
+  reports: Report[];
+  onReportClick: (report: Report) => void;
+}
+
+const MapContainer = ({ reports, onReportClick }: MapContainerProps) => {
   return (
     <div className="map-container">
       <div className="map-placeholder">
-        {/* <h3>Interactive Map</h3>
-        <p>Map integration to be implemented here</p> */}
-        <MapView />
+        <MapView reports={reports} onReportClick={onReportClick} />
       </div>
     </div>
   );
