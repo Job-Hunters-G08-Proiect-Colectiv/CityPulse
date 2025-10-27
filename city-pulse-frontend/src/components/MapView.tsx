@@ -7,9 +7,9 @@ import {
 } from "react-leaflet";
 import { ThumbsUp, ChevronLeft, ChevronRight } from 'lucide-react';
 import "./MapView.css";
-import type { LatLngExpression } from "leaflet";
+import { type LatLngExpression } from "leaflet";
 import type { Report } from "../types/report";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface MapViewProps {
   reports: Report[];
@@ -23,14 +23,17 @@ const MapView = ({ reports, onReportClick }: MapViewProps) => {
       : [46.77, 23.62];
 
   const markerRefs = useRef<any>({});
-  const [currentImageIndex, setCurrentImageIndex] = useState<{ [key: number]: number }>({});
+  const [currentImageIndex, setCurrentImageIndex] = useState<{ [key: number]: number }>({}); // State to track images on carousel
+  const hoverTimeoutRef = useRef<any>(null); // Timeout id
 
+  // Check if a file is a video/gif based on its extension
   const isVideo = (filename: string) => {
     return filename.toLowerCase().endsWith('.gif') ||
            filename.toLowerCase().endsWith('.mp4') ||
            filename.toLowerCase().endsWith('.webm');
   };
 
+  // Handler for image carousel navigation:
   const nextImage = (reportId: number, totalImages: number, e: React.MouseEvent) => {
     e.stopPropagation();
     setCurrentImageIndex(prev => ({
@@ -39,6 +42,7 @@ const MapView = ({ reports, onReportClick }: MapViewProps) => {
     }));
   };
 
+  // Same as previous handler but goes backward
   const prevImage = (reportId: number, totalImages: number, e: React.MouseEvent) => {
     e.stopPropagation();
     setCurrentImageIndex(prev => ({
@@ -46,6 +50,50 @@ const MapView = ({ reports, onReportClick }: MapViewProps) => {
       [reportId]: ((prev[reportId] || 0) - 1 + totalImages) % totalImages
     }));
   };
+
+  // Cancel the pending timeout (popup about to close) and open the popup
+  const handleMarkerMouseOver = (reportId: number) => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+    }
+    if (markerRefs.current[reportId]) {
+      markerRefs.current[reportId].openPopup();
+    }
+  };
+
+  // Start a timeout to close the popup after a delay when mouse leaves the marker
+  const handleMarkerMouseOut = (reportId: number) => {
+    hoverTimeoutRef.current = setTimeout(() => {
+      if (markerRefs.current[reportId]) {
+        markerRefs.current[reportId].closePopup();
+      }
+    }, 300); // 300 ms delay before closing
+  };
+
+  // Cancel the pending timeout when mouse hover over the popup
+  const handlePopupMouseEnter = () => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+    }
+  };
+
+  // Start a timeout to close the popup after a delay when mouse leaves the popup
+  const handlePopupMouseLeave = (reportId: number) => {
+    hoverTimeoutRef.current = setTimeout(() => {
+      if (markerRefs.current[reportId]) {
+        markerRefs.current[reportId].closePopup();
+      }
+    }, 300);
+  };
+
+  // Clear timeout on component unmount
+  useEffect(() => {
+    return () => {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
     <MapContainer center={position} zoom={13} id="map" zoomControl={false}>
@@ -57,9 +105,9 @@ const MapView = ({ reports, onReportClick }: MapViewProps) => {
       <ZoomControl position="topright" />
 
       {reports.map((report) => {
-        const hasMedia = report.images && report.images.length > 0;
-        const currentIndex = currentImageIndex[report.id] || 0;
-        const hasGif = hasMedia && report.images.some(img => isVideo(img));
+        const hasMedia = report.images && report.images.length > 0; // Check if report has any media
+        const currentIndex = currentImageIndex[report.id] || 0; // Get current image index for this report
+        const hasGif = hasMedia && report.images.some(img => isVideo(img)); // Check if there's any GIF/video
 
         return (
         <Marker
@@ -67,23 +115,17 @@ const MapView = ({ reports, onReportClick }: MapViewProps) => {
           position={[report.location.lat, report.location.lng]}
           ref={(ref) => void (markerRefs.current[report.id] = ref)}
           eventHandlers={{
-            mouseover: () => {
-              if (markerRefs.current[report.id]) {
-                markerRefs.current[report.id].openPopup();
-              }
-            },
-            mouseout: () => {
-              if (markerRefs.current[report.id]) {
-                markerRefs.current[report.id].closePopup();
-              }
-            },
+            mouseover: () => handleMarkerMouseOver(report.id),
+            mouseout: () => handleMarkerMouseOut(report.id),
             click: () => {
-              onReportClick(report);
+              onReportClick(report)
             },
           }}
         >
           <Popup maxWidth={300} minWidth={250}>
-              <div style={{ padding: '8px' }}>
+              <div style={{ padding: '8px' }}
+                  onMouseEnter={handlePopupMouseEnter}
+                  onMouseLeave={() => handlePopupMouseLeave(report.id)}>
                 <b style={{ fontSize: '16px' }}>{report.name}</b>
                 <br />
                 <span style={{ fontSize: '14px', color: '#666' }}>
