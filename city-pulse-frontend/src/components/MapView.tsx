@@ -8,13 +8,45 @@ import {
 import { ThumbsUp, ChevronLeft, ChevronRight } from 'lucide-react';
 import "./MapView.css";
 import { type LatLngExpression } from "leaflet";
+import L from 'leaflet';
 import type { Report } from "../types/report";
 import { useEffect, useRef, useState } from "react";
+import { getSeverityColor, getIconSize, getGlowRadius, getCategoryIcon } from "../utils/reportUtils";
 
 interface MapViewProps {
   reports: Report[];
   onReportClick: (report: Report) => void;
 }
+
+// Create custom icon with glow effect
+const createCustomIcon = (report: Report) => {
+  const icon = getCategoryIcon(report.category);
+  const color = getSeverityColor(report.severityLevel);
+  const glowRadius = getGlowRadius(report.upvotes);
+  const iconSize = getIconSize(report.upvotes);
+
+  const glowStyle = glowRadius > 0
+    ? `filter: drop-shadow(0 0 ${glowRadius}px ${color}) drop-shadow(0 0 ${glowRadius * 0.5}px ${color}) drop-shadow(0 0 ${glowRadius * 0.1}px ${color});`
+    : '';
+
+  const html = `
+    <div style="
+      font-size: ${iconSize}px;
+      ${glowStyle}
+      text-align: center;
+      line-height: 1;
+    ">
+      ${icon}
+    </div>
+  `;
+
+  return L.divIcon({
+    html: html,
+    className: 'custom-marker-icon',
+    iconSize: [iconSize, iconSize],
+    iconAnchor: [iconSize / 2, iconSize / 2],
+  });
+};
 
 const MapView = ({ reports, onReportClick }: MapViewProps) => {
   const position: LatLngExpression =
@@ -113,6 +145,7 @@ const MapView = ({ reports, onReportClick }: MapViewProps) => {
         <Marker
           key={report.id}
           position={[report.location.lat, report.location.lng]}
+          icon={createCustomIcon(report)}
           ref={(ref) => void (markerRefs.current[report.id] = ref)}
           eventHandlers={{
             mouseover: () => handleMarkerMouseOver(report.id),

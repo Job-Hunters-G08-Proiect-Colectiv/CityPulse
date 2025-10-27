@@ -28,12 +28,10 @@ export const getCategoryIcon = (category: ReportCategory): string => {
 
 // Calculate glow size based on upvotes
 export const getGlowRadius = (upvotes: number): number => {
-    const radius = upvotes / 5; // 1 glow radius per 5 upvotes
-    if (radius <= 200) {
-        return radius;
-    } else {
-        return 200; // Max glow radius
-    }
+    if (upvotes < 25) return 0;
+    if (upvotes < 50) return 8;
+    if (upvotes < 100) return 12;
+    return 16;  // Max glow radius
 };
 
 // Calculate icon size based on upvotes

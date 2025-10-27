@@ -1,21 +1,12 @@
-import type { Report, SeverityLevel } from '../types/report';
+import type { Report } from '../types/report';
 import { Calendar, MapPin, AlertCircle } from 'lucide-react';
+import { getSeverityColor } from '../utils/reportUtils';
 import './ReportCard.css';
 
 interface ReportCardProps {
   report: Report;
   onClick: () => void;
 }
-
-const getSeverityColor = (severity: SeverityLevel): string => {
-  const colors = {
-    LOW: '#10b981',
-    MEDIUM: '#f59e0b',
-    HIGH: '#ef4444',
-    CRITICAL: '#dc2626'
-  };
-  return colors[severity];
-};
 
 const ReportCard = ({ report, onClick }: ReportCardProps) => {
   const formatDate = (date: string) => {
