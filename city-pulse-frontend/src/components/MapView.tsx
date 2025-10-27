@@ -5,6 +5,7 @@ import {
   Popup,
   ZoomControl,
 } from "react-leaflet";
+import MarkerClusterGroup from "react-leaflet-markercluster";
 import { ThumbsUp } from 'lucide-react';
 import "./MapView.css";
 import type { LatLngExpression } from "leaflet";
@@ -33,40 +34,42 @@ const MapView = ({ reports, onReportClick }: MapViewProps) => {
 
       <ZoomControl position="topright" />
 
-      {reports.map((report) => (
-        <Marker
-          key={report.id}
-          position={[report.location.lat, report.location.lng]}
-          ref={(ref) => (markerRefs.current[report.id] = ref)}
-          eventHandlers={{
-            mouseover: () => {
-              if (markerRefs.current[report.id]) {
-                markerRefs.current[report.id].openPopup();
-              }
-            },
-            mouseout: () => {
-              if (markerRefs.current[report.id]) {
-                markerRefs.current[report.id].closePopup();
-              }
-            },
-            click: () => {
-              onReportClick(report);
-            },
-          }}
-        >
-          <Popup>
-            <b>{report.name}</b>
-            <br />
-            Category: {report.category}
-            <br />
-            Severity: {report.severityLevel}.
-            <br />
-            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-              <ThumbsUp size={16} /> {report.upvotes}
-            </div>
-          </Popup>
-        </Marker>
-      ))}
+      <MarkerClusterGroup>
+        {reports.map((report) => (
+          <Marker
+            key={report.id}
+            position={[report.location.lat, report.location.lng]}
+            ref={(ref) => (markerRefs.current[report.id] = ref)}
+            eventHandlers={{
+              mouseover: () => {
+                if (markerRefs.current[report.id]) {
+                  markerRefs.current[report.id].openPopup();
+                }
+              },
+              mouseout: () => {
+                if (markerRefs.current[report.id]) {
+                  markerRefs.current[report.id].closePopup();
+                }
+              },
+              click: () => {
+                onReportClick(report);
+              },
+            }}
+          >
+            <Popup>
+              <b>{report.name}</b>
+              <br />
+              Category: {report.category}
+              <br />
+              Severity: {report.severityLevel}.
+              <br />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <ThumbsUp size={16} /> {report.upvotes}
+              </div>
+            </Popup>
+          </Marker>
+        ))}
+      </MarkerClusterGroup>
     </MapContainer>
   );
 };
