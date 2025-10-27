@@ -8,11 +8,7 @@ import {
 import { ThumbsUp, ChevronLeft, ChevronRight } from 'lucide-react';
 import "./MapView.css";
 import { type LatLngExpression } from "leaflet";
-import L from 'leaflet';
 import MarkerClusterGroup from "react-leaflet-markercluster";
-import { ThumbsUp } from 'lucide-react';
-import "./MapView.css";
-import type { LatLngExpression } from "leaflet";
 import L from "leaflet";
 import type { Report } from "../types/report";
 import { useEffect, useRef, useState } from "react";
@@ -53,6 +49,84 @@ const createCustomIcon = (report: Report) => {
   });
 };
 
+// Check if a file is a video/gif based on its extension
+const isVideo = (filename: string) => {
+  return filename.toLowerCase().endsWith('.gif') ||
+         filename.toLowerCase().endsWith('.mp4') ||
+         filename.toLowerCase().endsWith('.webm');
+};
+
+interface ReportMediaProps {
+  report: Report;
+  currentImageIndex: number;
+  onPrev: (e: React.MouseEvent) => void;
+  onNext: (e: React.MouseEvent) => void;
+}
+
+const ReportMedia = ({ report, currentImageIndex, onPrev, onNext }: ReportMediaProps) => {
+  const hasMedia = report.images && report.images.length > 0;
+  if (!hasMedia) return null;
+
+  const gif = report.images.find(isVideo);
+
+  const imageStyle: React.CSSProperties = {
+    width: '100%',
+    maxHeight: '200px',
+    objectFit: 'cover',
+    borderRadius: '8px'
+  };
+
+  const buttonStyle: React.CSSProperties = {
+    position: 'absolute',
+    top: '50%',
+    transform: 'translateY(-50%)',
+    background: 'rgba(255, 255, 255, 0.8)',
+    border: 'none',
+    borderRadius: '50%',
+    width: '32px',
+    height: '32px',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+  };
+
+  return (
+    <div style={{ marginTop: '10px', marginBottom: '10px', position: 'relative' }}>
+      {gif ? (
+        <img src={gif} alt="Report media" style={imageStyle} />
+      ) : (
+        <>
+          <img src={report.images[currentImageIndex]} alt={`Report image ${currentImageIndex + 1}`} style={imageStyle} />
+          {report.images.length > 1 && (
+            <>
+              <button onClick={onPrev} style={{ ...buttonStyle, left: '5px' }}>
+                <ChevronLeft size={20} />
+              </button>
+              <button onClick={onNext} style={{ ...buttonStyle, right: '5px' }}>
+                <ChevronRight size={20} />
+              </button>
+              <div style={{
+                position: 'absolute',
+                bottom: '8px',
+                right: '8px',
+                background: 'rgba(0, 0, 0, 0.6)',
+                color: 'white',
+                padding: '4px 8px',
+                borderRadius: '12px',
+                fontSize: '12px'
+              }}>
+                {currentImageIndex + 1} / {report.images.length}
+              </div>
+            </>
+          )}
+        </>
+      )}
+    </div>
+  );
+};
+
 const MapView = ({ reports, onReportClick }: MapViewProps) => {
   const position: LatLngExpression =
     reports.length > 0
@@ -61,16 +135,9 @@ const MapView = ({ reports, onReportClick }: MapViewProps) => {
   const topLeftBound = L.latLng(46.876, 23.323);
   const bottomRightBound = L.latLng(46.688, 23.781);
   const maxBounds = L.latLngBounds(topLeftBound, bottomRightBound);
-  const markerRefs = useRef<any>({});
+  const markerRefs = useRef<Record<number, L.Marker | null>>({});
   const [currentImageIndex, setCurrentImageIndex] = useState<{ [key: number]: number }>({}); // State to track images on carousel
-  const hoverTimeoutRef = useRef<any>(null); // Timeout id
-
-  // Check if a file is a video/gif based on its extension
-  const isVideo = (filename: string) => {
-    return filename.toLowerCase().endsWith('.gif') ||
-           filename.toLowerCase().endsWith('.mp4') ||
-           filename.toLowerCase().endsWith('.webm');
-  };
+  const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null); // Timeout id
 
   // Handler for image carousel navigation:
   const nextImage = (reportId: number, totalImages: number, e: React.MouseEvent) => {
@@ -92,7 +159,7 @@ const MapView = ({ reports, onReportClick }: MapViewProps) => {
 
   // Cancel the pending timeout (popup about to close) and open the popup
   const handleMarkerMouseOver = (reportId: number) => {
-    if (hoverTimeoutRef.current) {
+    if (hoverTimeoutRef.current !== null) {
       clearTimeout(hoverTimeoutRef.current);
     }
     if (markerRefs.current[reportId]) {
@@ -111,7 +178,7 @@ const MapView = ({ reports, onReportClick }: MapViewProps) => {
 
   // Cancel the pending timeout when mouse hover over the popup
   const handlePopupMouseEnter = () => {
-    if (hoverTimeoutRef.current) {
+    if (hoverTimeoutRef.current !== null) {
       clearTimeout(hoverTimeoutRef.current);
     }
   };
@@ -128,7 +195,7 @@ const MapView = ({ reports, onReportClick }: MapViewProps) => {
   // Clear timeout on component unmount
   useEffect(() => {
     return () => {
-      if (hoverTimeoutRef.current) {
+      if (hoverTimeoutRef.current !== null) {
         clearTimeout(hoverTimeoutRef.current);
       }
     };
@@ -143,182 +210,54 @@ const MapView = ({ reports, onReportClick }: MapViewProps) => {
 
       <ZoomControl position="topright" />
 
-      {reports.map((report) => {
-        const hasMedia = report.images && report.images.length > 0; // Check if report has any media
-        const currentIndex = currentImageIndex[report.id] || 0; // Get current image index for this report
-        const hasGif = hasMedia && report.images.some(img => isVideo(img)); // Check if there's any GIF/video
-
-        return (
-        <Marker
-          key={report.id}
-          position={[report.location.lat, report.location.lng]}
-          icon={createCustomIcon(report)}
-          ref={(ref) => void (markerRefs.current[report.id] = ref)}
-          eventHandlers={{
-            mouseover: () => handleMarkerMouseOver(report.id),
-            mouseout: () => handleMarkerMouseOut(report.id),
-            click: () => {
-              onReportClick(report)
-            },
-          }}
-        >
-          <Popup maxWidth={300} minWidth={250}>
-              <div style={{ padding: '8px' }}
-                  onMouseEnter={handlePopupMouseEnter}
-                  onMouseLeave={() => handlePopupMouseLeave(report.id)}>
-                <b style={{ fontSize: '16px' }}>{report.name}</b>
-                <br />
-                <span style={{ fontSize: '14px', color: '#666' }}>
-                  Category: {report.category}
-                </span>
-                <br />
-                <span style={{ fontSize: '14px', color: '#666' }}>
-                  Severity: {report.severityLevel}
-                </span>
-                <br />
-                
-                {/* Media Display */}
-                {hasMedia && (
-                  <div style={{ marginTop: '10px', marginBottom: '10px' }}>
-                    {hasGif ? (
-                      // Show only GIF/video if present
-                      <div style={{ position: 'relative' }}>
-                        {report.images.filter(img => isVideo(img)).map((gif, idx) => (
-                          <img
-                            key={idx}
-                            src={gif}
-                            alt="Report media"
-                            style={{
-                              width: '100%',
-                              maxHeight: '200px',
-                              objectFit: 'cover',
-                              borderRadius: '8px'
-                            }}
-                          />
-                        ))[0]}
-                      </div>
-                    ) : (
-                      // Show image carousel if no GIF
-                      <div style={{ position: 'relative' }}>
-                        <img
-                          src={report.images[currentIndex]}
-                          alt={`Report image ${currentIndex + 1}`}
-                          style={{
-                            width: '100%',
-                            maxHeight: '200px',
-                            objectFit: 'cover',
-                            borderRadius: '8px'
-                          }}
-                        />
-                        
-                        {report.images.length > 1 && (
-                          <>
-                            <button
-                              onClick={(e) => prevImage(report.id, report.images.length, e)}
-                              style={{
-                                position: 'absolute',
-                                left: '5px',
-                                top: '50%',
-                                transform: 'translateY(-50%)',
-                                background: 'rgba(255, 255, 255, 0.8)',
-                                border: 'none',
-                                borderRadius: '50%',
-                                width: '32px',
-                                height: '32px',
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                              }}
-                            >
-                              <ChevronLeft size={20} />
-                            </button>
-                            <button
-                              onClick={(e) => nextImage(report.id, report.images.length, e)}
-                              style={{
-                                position: 'absolute',
-                                right: '5px',
-                                top: '50%',
-                                transform: 'translateY(-50%)',
-                                background: 'rgba(255, 255, 255, 0.8)',
-                                border: 'none',
-                                borderRadius: '50%',
-                                width: '32px',
-                                height: '32px',
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                              }}
-                            >
-                              <ChevronRight size={20} />
-                            </button>
-                            
-                            {/* Image counter */}
-                            <div style={{
-                              position: 'absolute',
-                              bottom: '8px',
-                              right: '8px',
-                              background: 'rgba(0, 0, 0, 0.6)',
-                              color: 'white',
-                              padding: '4px 8px',
-                              borderRadius: '12px',
-                              fontSize: '12px'
-                            }}>
-                              {currentIndex + 1} / {report.images.length}
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
-                
-                <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '8px' }}>
-                  <ThumbsUp size={16} /> {report.upvotes}
-                </div>
-              </div>
-            </Popup>
-          </Marker>
-        );
-      })}
       <MarkerClusterGroup>
-        {reports.map((report) => (
-          <Marker
+        {reports.map((report) => {
+          const currentIndex = currentImageIndex[report.id] || 0; // Get current image index for this report
+
+          return (
+            <Marker
             key={report.id}
             position={[report.location.lat, report.location.lng]}
-            ref={(ref) => (markerRefs.current[report.id] = ref)}
+            icon={createCustomIcon(report)}
+            ref={(ref) => void (markerRefs.current[report.id] = ref)}
             eventHandlers={{
-              mouseover: () => {
-                if (markerRefs.current[report.id]) {
-                  markerRefs.current[report.id].openPopup();
-                }
-              },
-              mouseout: () => {
-                if (markerRefs.current[report.id]) {
-                  markerRefs.current[report.id].closePopup();
-                }
-              },
+              mouseover: () => handleMarkerMouseOver(report.id),
+              mouseout: () => handleMarkerMouseOut(report.id),
               click: () => {
-                onReportClick(report);
+                onReportClick(report)
               },
             }}
           >
-            <Popup>
-              <b>{report.name}</b>
-              <br />
-              Category: {report.category}
-              <br />
-              Severity: {report.severityLevel}.
-              <br />
-              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <ThumbsUp size={16} /> {report.upvotes}
-              </div>
+            <Popup maxWidth={300} minWidth={250}>
+                <div style={{ padding: '8px' }}
+                    onMouseEnter={handlePopupMouseEnter}
+                    onMouseLeave={() => handlePopupMouseLeave(report.id)}>
+                  <b style={{ fontSize: '16px' }}>{report.name}</b>
+                  <br />
+                  <span style={{ fontSize: '14px', color: '#666' }}>
+                    Category: {report.category}
+                  </span>
+                  <br />
+                  <span style={{ fontSize: '14px', color: '#666' }}>
+                    Severity: {report.severityLevel}
+                  </span>
+                  <br />
+                  
+                  <ReportMedia
+                    report={report}
+                    currentImageIndex={currentIndex}
+                    onPrev={(e) => prevImage(report.id, report.images.length, e)}
+                    onNext={(e) => nextImage(report.id, report.images.length, e)}
+                  />
+                  
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '8px' }}>
+                    <ThumbsUp size={16} /> {report.upvotes}
+                  </div>
+                </div>
             </Popup>
           </Marker>
-        ))}
+          )
+        })}
       </MarkerClusterGroup>
     </MapContainer>
   );
