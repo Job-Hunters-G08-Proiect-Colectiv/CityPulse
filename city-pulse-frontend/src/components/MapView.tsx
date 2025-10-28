@@ -10,10 +10,7 @@ import "./MapView.css";
 import { type LatLngExpression } from "leaflet";
 import L from 'leaflet';
 import MarkerClusterGroup from "react-leaflet-markercluster";
-import { ThumbsUp } from 'lucide-react';
 import "./MapView.css";
-import type { LatLngExpression } from "leaflet";
-import L from "leaflet";
 import type { Report } from "../types/report";
 import { useEffect, useRef, useState } from "react";
 import { getSeverityColor, getIconSize, getGlowRadius, getCategoryIconPath } from "../utils/reportUtils";
@@ -167,51 +164,67 @@ const MapView = ({ reports, onReportClick }: MapViewProps) => {
 
       <ZoomControl position="topright" />
 
-      {reports.map((report) => {
-        const hasMedia = report.images && report.images.length > 0; // Check if report has any media
-        const currentIndex = currentImageIndex[report.id] || 0; // Get current image index for this report
-        const hasGif = hasMedia && report.images.some(img => isVideo(img)); // Check if there's any GIF/video
+      <MarkerClusterGroup>
+        {reports.map((report) => {
+          const hasMedia = report.images && report.images.length > 0;
+          const currentIndex = currentImageIndex[report.id] || 0;
+          const hasGif = hasMedia && report.images.some(img => isVideo(img));
 
-        return (
-        <Marker
-          key={report.id}
-          position={[report.location.lat, report.location.lng]}
-          icon={createCustomIcon(report)}
-          ref={(ref) => void (markerRefs.current[report.id] = ref)}
-          eventHandlers={{
-            mouseover: () => handleMarkerMouseOver(report.id),
-            mouseout: () => handleMarkerMouseOut(report.id),
-            click: () => {
-              onReportClick(report)
-            },
-          }}
-        >
-          <Popup maxWidth={300} minWidth={250}>
-              <div style={{ padding: '8px' }}
-                  onMouseEnter={handlePopupMouseEnter}
-                  onMouseLeave={() => handlePopupMouseLeave(report.id)}>
-                <b style={{ fontSize: '16px' }}>{report.name}</b>
-                <br />
-                <span style={{ fontSize: '14px', color: '#666' }}>
-                  Category: {report.category}
-                </span>
-                <br />
-                <span style={{ fontSize: '14px', color: '#666' }}>
-                  Severity: {report.severityLevel}
-                </span>
-                <br />
-                
-                {/* Media Display */}
-                {hasMedia && (
-                  <div style={{ marginTop: '10px', marginBottom: '10px' }}>
-                    {hasGif ? (
-                      // Show only GIF/video if present
-                      <div style={{ position: 'relative' }}>
-                        {report.images.filter(img => isVideo(img)).map((gif, idx) => (
+          return (
+            <Marker
+              key={report.id}
+              position={[report.location.lat, report.location.lng]}
+              icon={createCustomIcon(report)}
+              ref={(ref) => {
+                markerRefs.current[report.id] = ref;
+              }}
+              eventHandlers={{
+                mouseover: () => handleMarkerMouseOver(report.id),
+                mouseout: () => handleMarkerMouseOut(report.id),
+                click: () => {
+                  onReportClick(report)
+                },
+              }}
+            >
+              <Popup maxWidth={300} minWidth={250}>
+                <div style={{ padding: '8px' }}
+                    onMouseEnter={handlePopupMouseEnter}
+                    onMouseLeave={() => handlePopupMouseLeave(report.id)}>
+                  <b style={{ fontSize: '16px' }}>{report.name}</b>
+                  <br />
+                  <span style={{ fontSize: '14px', color: '#666' }}>
+                    Category: {report.category}
+                  </span>
+                  <br />
+                  <span style={{ fontSize: '14px', color: '#666' }}>
+                    Severity: {report.severityLevel}
+                  </span>
+                  <br />
+                  
+                  {/* Media Display */}
+                  {hasMedia && (
+                    <div style={{ marginTop: '10px', marginBottom: '10px' }}>
+                      {hasGif ? (
+                        <div style={{ position: 'relative' }}>
+                          {report.images.filter(img => isVideo(img)).map((gif, idx) => (
+                            <img
+                              key={idx}
+                              src={gif}
+                              alt="Report media"
+                              style={{
+                                width: '100%',
+                                maxHeight: '200px',
+                                objectFit: 'cover',
+                                borderRadius: '8px'
+                              }}
+                            />
+                          ))[0]}
+                        </div>
+                      ) : (
+                        <div style={{ position: 'relative' }}>
                           <img
-                            key={idx}
-                            src={gif}
-                            alt="Report media"
+                            src={report.images[currentIndex]}
+                            alt={`Report image ${currentIndex + 1}`}
                             style={{
                               width: '100%',
                               maxHeight: '200px',
@@ -219,130 +232,79 @@ const MapView = ({ reports, onReportClick }: MapViewProps) => {
                               borderRadius: '8px'
                             }}
                           />
-                        ))[0]}
-                      </div>
-                    ) : (
-                      // Show image carousel if no GIF
-                      <div style={{ position: 'relative' }}>
-                        <img
-                          src={report.images[currentIndex]}
-                          alt={`Report image ${currentIndex + 1}`}
-                          style={{
-                            width: '100%',
-                            maxHeight: '200px',
-                            objectFit: 'cover',
-                            borderRadius: '8px'
-                          }}
-                        />
-                        
-                        {report.images.length > 1 && (
-                          <>
-                            <button
-                              onClick={(e) => prevImage(report.id, report.images.length, e)}
-                              style={{
+                          
+                          {report.images.length > 1 && (
+                            <>
+                              <button
+                                onClick={(e) => prevImage(report.id, report.images.length, e)}
+                                style={{
+                                  position: 'absolute',
+                                  left: '5px',
+                                  top: '50%',
+                                  transform: 'translateY(-50%)',
+                                  background: 'rgba(255, 255, 255, 0.8)',
+                                  border: 'none',
+                                  borderRadius: '50%',
+                                  width: '32px',
+                                  height: '32px',
+                                  cursor: 'pointer',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                                }}
+                              >
+                                <ChevronLeft size={20} />
+                              </button>
+                              <button
+                                onClick={(e) => nextImage(report.id, report.images.length, e)}
+                                style={{
+                                  position: 'absolute',
+                                  right: '5px',
+                                  top: '50%',
+                                  transform: 'translateY(-50%)',
+                                  background: 'rgba(255, 255, 255, 0.8)',
+                                  border: 'none',
+                                  borderRadius: '50%',
+                                  width: '32px',
+                                  height: '32px',
+                                  cursor: 'pointer',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                                }}
+                              >
+                                <ChevronRight size={20} />
+                              </button>
+                              
+                              <div style={{
                                 position: 'absolute',
-                                left: '5px',
-                                top: '50%',
-                                transform: 'translateY(-50%)',
-                                background: 'rgba(255, 255, 255, 0.8)',
-                                border: 'none',
-                                borderRadius: '50%',
-                                width: '32px',
-                                height: '32px',
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                              }}
-                            >
-                              <ChevronLeft size={20} />
-                            </button>
-                            <button
-                              onClick={(e) => nextImage(report.id, report.images.length, e)}
-                              style={{
-                                position: 'absolute',
-                                right: '5px',
-                                top: '50%',
-                                transform: 'translateY(-50%)',
-                                background: 'rgba(255, 255, 255, 0.8)',
-                                border: 'none',
-                                borderRadius: '50%',
-                                width: '32px',
-                                height: '32px',
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                              }}
-                            >
-                              <ChevronRight size={20} />
-                            </button>
-                            
-                            {/* Image counter */}
-                            <div style={{
-                              position: 'absolute',
-                              bottom: '8px',
-                              right: '8px',
-                              background: 'rgba(0, 0, 0, 0.6)',
-                              color: 'white',
-                              padding: '4px 8px',
-                              borderRadius: '12px',
-                              fontSize: '12px'
-                            }}>
-                              {currentIndex + 1} / {report.images.length}
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    )}
+                                bottom: '8px',
+                                right: '8px',
+                                background: 'rgba(0, 0, 0, 0.6)',
+                                color: 'white',
+                                padding: '4px 8px',
+                                borderRadius: '12px',
+                                fontSize: '12px'
+                              }}>
+                                {currentIndex + 1} / {report.images.length}
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '8px' }}>
+                    <ThumbsUp size={16} /> {report.upvotes}
                   </div>
-                )}
-                
-                <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '8px' }}>
-                  <ThumbsUp size={16} /> {report.upvotes}
                 </div>
-              </div>
-            </Popup>
-          </Marker>
-        );
-      })}
-      <MarkerClusterGroup>
-        {reports.map((report) => (
-          <Marker
-            key={report.id}
-            position={[report.location.lat, report.location.lng]}
-            ref={(ref) => (markerRefs.current[report.id] = ref)}
-            eventHandlers={{
-              mouseover: () => {
-                if (markerRefs.current[report.id]) {
-                  markerRefs.current[report.id].openPopup();
-                }
-              },
-              mouseout: () => {
-                if (markerRefs.current[report.id]) {
-                  markerRefs.current[report.id].closePopup();
-                }
-              },
-              click: () => {
-                onReportClick(report);
-              },
-            }}
-          >
-            <Popup>
-              <b>{report.name}</b>
-              <br />
-              Category: {report.category}
-              <br />
-              Severity: {report.severityLevel}.
-              <br />
-              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <ThumbsUp size={16} /> {report.upvotes}
-              </div>
-            </Popup>
-          </Marker>
-        ))}
+              </Popup>
+            </Marker>
+          );
+        })}
       </MarkerClusterGroup>
     </MapContainer>
   );
