@@ -6,6 +6,7 @@ import NewReportButton from './components/NewReportButton';
 import MapContainer from './components/MapContainer';
 import NetworkErrorModal from "./components/NetworkErrorModal";
 import { reportService, type CreateReportDto } from './services/reportService';
+import { API_ENDPOINTS } from './config/api';
 import type { Report, ReportCategory, ReportStatus, SeverityLevel } from './types/report';
 import './App.css';
 
@@ -31,6 +32,39 @@ function App() {
 
     return () => clearTimeout(timeoutId);
   }, [searchTerm, filterCategory, filterStatus, filterSeverity]);
+
+  // Background connectivity ping every 3 seconds
+  useEffect(() => {
+    let isCancelled = false;
+
+    const pingBackend = async () => {
+      try {
+        if (!navigator.onLine) {
+          if (!isCancelled) setNetworkError(true);
+          return;
+        }
+        const resp = await fetch(API_ENDPOINTS.REPORTS, {
+          method: 'HEAD',
+          cache: 'no-store',
+        });
+        if (!isCancelled) {
+          if (!resp.ok) setNetworkError(true);
+          else setNetworkError(false);
+        }
+      } catch (e) {
+        if (!isCancelled) setNetworkError(true);
+      }
+    };
+
+    const intervalId = setInterval(pingBackend, 3000);
+    // Fire one immediate ping on mount
+    pingBackend();
+
+    return () => {
+      isCancelled = true;
+      clearInterval(intervalId);
+    };
+  }, []);
 
   // Fetch reports from backend with filters
   const fetchReports = async () => {
