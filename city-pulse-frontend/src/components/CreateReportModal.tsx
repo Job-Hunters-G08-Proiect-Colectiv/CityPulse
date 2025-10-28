@@ -35,6 +35,8 @@ const CreateReportModal = ({ isOpen, onClose, onSubmit }: CreateReportModalProps
   });
   const [images, setImages] = useState<string[]>([]);
   const [addressSuggestions, setAddressSuggestions] = useState<NominatimResult[]>([]);
+  const [locationMode, setLocationMode] = useState<'address' | 'coordinates'>('address');
+  const [geocodingError, setGeocodingError] = useState<string | null>(null);
 
   useEffect(() => {
     if (formData.address.length > 2) {
@@ -61,9 +63,38 @@ const CreateReportModal = ({ isOpen, onClose, onSubmit }: CreateReportModalProps
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit({ ...formData, images });
+    setGeocodingError(null);
+
+    let submissionData = { ...formData };
+
+    if (locationMode === 'address') {
+      try {
+        const hasCoords = submissionData.location.lat !== 0 || submissionData.location.lng !== 0;
+        if (!hasCoords) {
+          const resp = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(submissionData.address)}&limit=1`);
+          const results: NominatimResult[] = await resp.json();
+          if (results && results.length > 0) {
+            submissionData = {
+              ...submissionData,
+              location: {
+                lat: parseFloat(results[0].lat),
+                lng: parseFloat(results[0].lon)
+              }
+            };
+          } else {
+            setGeocodingError('Address not found. Please refine or switch to coordinates.');
+            return;
+          }
+        }
+      } catch (err) {
+        setGeocodingError('Failed to geocode address. Try again or use coordinates.');
+        return;
+      }
+    }
+
+    onSubmit({ ...submissionData, images });
     // Reset form
     setFormData({
       name: '',
@@ -74,6 +105,8 @@ const CreateReportModal = ({ isOpen, onClose, onSubmit }: CreateReportModalProps
       description: ''
     });
     setImages([]);
+    setLocationMode('address');
+    setGeocodingError(null);
     onClose();
   };
 
@@ -99,6 +132,7 @@ const CreateReportModal = ({ isOpen, onClose, onSubmit }: CreateReportModalProps
       },
     });
     setAddressSuggestions([]);
+    setGeocodingError(null);
   };
 
   return (
@@ -158,53 +192,83 @@ const CreateReportModal = ({ isOpen, onClose, onSubmit }: CreateReportModalProps
               </select>
             </div>
 
+            {/* Location mode toggle + conditional inputs */}
             <div className="form-group">
-              <label>Address *</label>
-              <input
-                type="text"
-                value={formData.address}
-                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                placeholder="Street address, City, State ZIP"
-                required
-              />
-              {addressSuggestions.length > 0 && (
-                <ul className="address-suggestions">
-                  {addressSuggestions.map((suggestion) => (
-                    <li key={suggestion.place_id} onClick={() => handleSuggestionClick(suggestion)}>
-                      {suggestion.display_name}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-
-            <div className="form-group">
-              <label>Location *</label>
-              <div className="form-hint">Enter coordinates or use map to select</div>
-              <div className="location-input">
-                <input
-                  type="number"
-                  step="any"
-                  placeholder="Latitude"
-                  value={formData.location.lat || ''}
-                  onChange={(e) => setFormData({ 
-                    ...formData, 
-                    location: { ...formData.location, lat: parseFloat(e.target.value) || 0 }
-                  })}
-                  required
-                />
-                <input
-                  type="number"
-                  step="any"
-                  placeholder="Longitude"
-                  value={formData.location.lng || ''}
-                  onChange={(e) => setFormData({ 
-                    ...formData, 
-                    location: { ...formData.location, lng: parseFloat(e.target.value) || 0 }
-                  })}
-                  required
-                />
+              <label>Location Input *</label>
+              <div className="location-toggle" style={{ display: 'flex', gap: '12px', marginBottom: '8px' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <input
+                    type="radio"
+                    name="locationMode"
+                    checked={locationMode === 'address'}
+                    onChange={() => setLocationMode('address')}
+                  />
+                  Address
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <input
+                    type="radio"
+                    name="locationMode"
+                    checked={locationMode === 'coordinates'}
+                    onChange={() => setLocationMode('coordinates')}
+                  />
+                  Coordinates
+                </label>
               </div>
+
+              {locationMode === 'address' && (
+                <>
+                  <input
+                    type="text"
+                    value={formData.address}
+                    onChange={(e) => { setFormData({ ...formData, address: e.target.value }); setGeocodingError(null); }}
+                    placeholder="Street address, City, Country"
+                    required
+                  />
+                  {addressSuggestions.length > 0 && (
+                    <ul className="address-suggestions">
+                      {addressSuggestions.map((suggestion) => (
+                        <li key={suggestion.place_id} onClick={() => handleSuggestionClick(suggestion)}>
+                          {suggestion.display_name}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {geocodingError && (
+                    <div className="form-hint" style={{ color: '#ef4444', marginTop: '6px' }}>{geocodingError}</div>
+                  )}
+                </>
+              )}
+
+              {locationMode === 'coordinates' && (
+                <>
+                  <div className="form-hint">Enter coordinates or use map to select</div>
+                  <div className="location-input">
+                    <input
+                      type="number"
+                      step="any"
+                      placeholder="Latitude"
+                      value={formData.location.lat || ''}
+                      onChange={(e) => setFormData({ 
+                        ...formData, 
+                        location: { ...formData.location, lat: parseFloat(e.target.value) || 0 }
+                      })}
+                      required
+                    />
+                    <input
+                      type="number"
+                      step="any"
+                      placeholder="Longitude"
+                      value={formData.location.lng || ''}
+                      onChange={(e) => setFormData({ 
+                        ...formData, 
+                        location: { ...formData.location, lng: parseFloat(e.target.value) || 0 }
+                      })}
+                      required
+                    />
+                  </div>
+                </>
+              )}
             </div>
 
             <div className="form-group">

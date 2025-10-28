@@ -4,6 +4,7 @@ import CreateReportModal from './components/CreateReportModal';
 import ReportDetailModal from './components/ReportDetailModal';
 import NewReportButton from './components/NewReportButton';
 import MapContainer from './components/MapContainer';
+import NetworkErrorModal from "./components/NetworkErrorModal";
 import { reportService, type CreateReportDto } from './services/reportService';
 import type { Report, ReportCategory, ReportStatus, SeverityLevel } from './types/report';
 import './App.css';
@@ -12,7 +13,6 @@ function App() {
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false); // New state for subsequent loads
-  const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isListOpen, setIsListOpen] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
@@ -21,6 +21,7 @@ function App() {
   const [filterCategory, setFilterCategory] = useState<ReportCategory | 'ALL'>('ALL');
   const [filterStatus, setFilterStatus] = useState<ReportStatus | 'ALL'>('ALL');
   const [filterSeverity, setFilterSeverity] = useState<SeverityLevel | 'ALL'>('ALL');
+  const [networkError, setNetworkError] = useState(false);
 
   // Debounced search effect
   useEffect(() => {
@@ -40,7 +41,7 @@ function App() {
       } else {
         setIsRefreshing(true);
       }
-      setError(null);
+      setNetworkError(false);
       
       const filters: any = {};
       if (filterCategory !== 'ALL') filters.category = filterCategory;
@@ -50,8 +51,11 @@ function App() {
 
       const data = await reportService.getAllReports(filters);
       setReports(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch reports');
+    } catch (err: any) {
+      const message = (err?.message || '').toLowerCase();
+      if (!navigator.onLine || message.includes('failed to fetch') || message.includes('network')) {
+        setNetworkError(true);
+      }
       console.error('Error fetching reports:', err);
     } finally {
       setLoading(false);
@@ -109,6 +113,8 @@ function App() {
     }
   };
 
+  
+
   // Show loading screen only on initial load
   if (loading && reports.length === 0) {
     return (
@@ -123,6 +129,10 @@ function App() {
         }}>
           <div style={{ fontSize: '18px', marginBottom: '10px' }}>Loading reports...</div>
         </div>
+        <NetworkErrorModal open={networkError} onRetry={() => {
+  setNetworkError(false);
+  fetchReports();
+}} />
       </div>
     );
   }
@@ -149,40 +159,7 @@ function App() {
         </div>
       )}
       
-      {error && (
-        <div style={{
-          position: 'fixed',
-          top: '20px',
-          right: '20px',
-          backgroundColor: 'rgba(239, 68, 68, 0.9)',
-          color: 'white',
-          padding: '12px 16px',
-          borderRadius: '6px',
-          fontSize: '14px',
-          zIndex: 9999,
-          boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px'
-        }}>
-          <span>{error}</span>
-          <button 
-            onClick={fetchReports}
-            style={{
-              padding: '4px 8px',
-              backgroundColor: 'white',
-              color: '#ef4444',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '12px',
-              fontWeight: '500'
-            }}
-          >
-            Retry
-          </button>
-        </div>
-      )}
+      {/* Removed top-right error toast; network modal remains the sole error UI */}
       
       <ReportList 
         reports={reports}
@@ -215,6 +192,10 @@ function App() {
         onClose={() => setSelectedReport(null)}
         onUpvote={handleUpvote}
       />
+      <NetworkErrorModal open={networkError} onRetry={() => {
+  setNetworkError(false);
+  fetchReports();
+}} />
     </div>
   );
 }
