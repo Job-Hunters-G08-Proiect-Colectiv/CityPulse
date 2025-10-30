@@ -1,12 +1,12 @@
-import { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
-import type { Report, ReportCategory, SeverityLevel } from '../types/report';
-import './CreateReportModal.css';
+import { useState, useEffect } from "react";
+import { X } from "lucide-react";
+import type { Report, ReportCategory, SeverityLevel } from "../types/report";
+import "./CreateReportModal.css";
 
 interface CreateReportModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: Omit<Report, 'id' | 'date' | 'status' | 'upvotes'>) => void;
+  onSubmit: (data: Omit<Report, "id" | "date" | "status" | "upvotes">) => void;
 }
 
 interface NominatimResult {
@@ -24,18 +24,26 @@ interface NominatimResult {
   icon?: string;
 }
 
-const CreateReportModal = ({ isOpen, onClose, onSubmit }: CreateReportModalProps) => {
+const CreateReportModal = ({
+  isOpen,
+  onClose,
+  onSubmit,
+}: CreateReportModalProps) => {
   const [formData, setFormData] = useState({
-    name: '',
+    name: "",
     location: { lat: 0, lng: 0 },
-    address: '',
-    category: 'OTHER' as ReportCategory,
-    severityLevel: 'LOW' as SeverityLevel,
-    description: ''
+    address: "",
+    category: "OTHER" as ReportCategory,
+    severityLevel: "LOW" as SeverityLevel,
+    description: "",
   });
   const [images, setImages] = useState<string[]>([]);
-  const [addressSuggestions, setAddressSuggestions] = useState<NominatimResult[]>([]);
-  const [locationMode, setLocationMode] = useState<'address' | 'coordinates'>('address');
+  const [addressSuggestions, setAddressSuggestions] = useState<
+    NominatimResult[]
+  >([]);
+  const [locationMode, setLocationMode] = useState<"address" | "coordinates">(
+    "address"
+  );
   const [geocodingError, setGeocodingError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -49,7 +57,7 @@ const CreateReportModal = ({ isOpen, onClose, onSubmit }: CreateReportModalProps
             const data = await response.json();
             setAddressSuggestions(data);
           } catch (error) {
-            console.error('Error fetching address suggestions:', error);
+            console.error("Error fetching address suggestions:", error);
           }
         };
         fetchSuggestions();
@@ -69,43 +77,56 @@ const CreateReportModal = ({ isOpen, onClose, onSubmit }: CreateReportModalProps
 
     let submissionData = { ...formData };
 
-    if (locationMode === 'address') {
+    if (locationMode === "address") {
       try {
-        const hasCoords = submissionData.location.lat !== 0 || submissionData.location.lng !== 0;
+        const hasCoords =
+          submissionData.location.lat !== 0 ||
+          submissionData.location.lng !== 0;
         if (!hasCoords) {
-          const resp = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(submissionData.address)}&limit=1`);
+          const resp = await fetch(
+            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+              submissionData.address
+            )}&limit=1`
+          );
           const results: NominatimResult[] = await resp.json();
           if (results && results.length > 0) {
             submissionData = {
               ...submissionData,
               location: {
                 lat: parseFloat(results[0].lat),
-                lng: parseFloat(results[0].lon)
-              }
+                lng: parseFloat(results[0].lon),
+              },
             };
           } else {
-            setGeocodingError('Address not found. Please refine or switch to coordinates.');
+            setGeocodingError(
+              "Address not found. Please refine or switch to coordinates."
+            );
             return;
           }
         }
       } catch (err) {
-        setGeocodingError('Failed to geocode address. Try again or use coordinates.');
+        setGeocodingError(
+          "Failed to geocode address. Try again or use coordinates."
+        );
         return;
       }
     }
-
+    if (locationMode === "coordinates") {
+      submissionData.address = `${submissionData.location.lat}, ${submissionData.location.lng}`;
+    }
     onSubmit({ ...submissionData, images });
+
     // Reset form
     setFormData({
-      name: '',
+      name: "",
       location: { lat: 0, lng: 0 },
-      address: '',
-      category: 'OTHER' as ReportCategory,
-      severityLevel: 'LOW' as SeverityLevel,
-      description: ''
+      address: "",
+      category: "OTHER" as ReportCategory,
+      severityLevel: "LOW" as SeverityLevel,
+      description: "",
     });
     setImages([]);
-    setLocationMode('address');
+    setLocationMode("address");
     setGeocodingError(null);
     onClose();
   };
@@ -113,7 +134,9 @@ const CreateReportModal = ({ isOpen, onClose, onSubmit }: CreateReportModalProps
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files) {
-      const newImages = Array.from(files).map(file => URL.createObjectURL(file));
+      const newImages = Array.from(files).map((file) =>
+        URL.createObjectURL(file)
+      );
       setImages([...images, ...newImages]);
     }
   };
@@ -140,9 +163,9 @@ const CreateReportModal = ({ isOpen, onClose, onSubmit }: CreateReportModalProps
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h2>Create New Report</h2>
-          <button 
+          <button
             type="button"
-            className="close-button" 
+            className="close-button"
             onClick={onClose}
             aria-label="Close modal"
           >
@@ -156,7 +179,9 @@ const CreateReportModal = ({ isOpen, onClose, onSubmit }: CreateReportModalProps
               <input
                 type="text"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
                 placeholder="Brief description of the issue"
                 required
               />
@@ -166,7 +191,12 @@ const CreateReportModal = ({ isOpen, onClose, onSubmit }: CreateReportModalProps
               <label>Category *</label>
               <select
                 value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value as ReportCategory })}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    category: e.target.value as ReportCategory,
+                  })
+                }
                 required
               >
                 <option value="POTHOLE">Pothole</option>
@@ -182,7 +212,12 @@ const CreateReportModal = ({ isOpen, onClose, onSubmit }: CreateReportModalProps
               <label>Severity Level *</label>
               <select
                 value={formData.severityLevel}
-                onChange={(e) => setFormData({ ...formData, severityLevel: e.target.value as SeverityLevel })}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    severityLevel: e.target.value as SeverityLevel,
+                  })
+                }
                 required
               >
                 <option value="LOW">Low</option>
@@ -195,75 +230,105 @@ const CreateReportModal = ({ isOpen, onClose, onSubmit }: CreateReportModalProps
             {/* Location mode toggle + conditional inputs */}
             <div className="form-group">
               <label>Location Input *</label>
-              <div className="location-toggle" style={{ display: 'flex', gap: '12px', marginBottom: '8px' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div
+                className="location-toggle"
+                style={{ display: "flex", gap: "12px", marginBottom: "8px" }}
+              >
+                <label
+                  style={{ display: "flex", alignItems: "center", gap: "6px" }}
+                >
                   <input
                     type="radio"
                     name="locationMode"
-                    checked={locationMode === 'address'}
-                    onChange={() => setLocationMode('address')}
+                    checked={locationMode === "address"}
+                    onChange={() => setLocationMode("address")}
                   />
                   Address
                 </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <label
+                  style={{ display: "flex", alignItems: "center", gap: "6px" }}
+                >
                   <input
                     type="radio"
                     name="locationMode"
-                    checked={locationMode === 'coordinates'}
-                    onChange={() => setLocationMode('coordinates')}
+                    checked={locationMode === "coordinates"}
+                    onChange={() => setLocationMode("coordinates")}
                   />
                   Coordinates
                 </label>
               </div>
 
-              {locationMode === 'address' && (
+              {locationMode === "address" && (
                 <>
                   <input
                     type="text"
                     value={formData.address}
-                    onChange={(e) => { setFormData({ ...formData, address: e.target.value }); setGeocodingError(null); }}
+                    onChange={(e) => {
+                      setFormData({ ...formData, address: e.target.value });
+                      setGeocodingError(null);
+                    }}
                     placeholder="Street address, City, Country"
                     required
                   />
                   {addressSuggestions.length > 0 && (
                     <ul className="address-suggestions">
                       {addressSuggestions.map((suggestion) => (
-                        <li key={suggestion.place_id} onClick={() => handleSuggestionClick(suggestion)}>
+                        <li
+                          key={suggestion.place_id}
+                          onClick={() => handleSuggestionClick(suggestion)}
+                        >
                           {suggestion.display_name}
                         </li>
                       ))}
                     </ul>
                   )}
                   {geocodingError && (
-                    <div className="form-hint" style={{ color: '#ef4444', marginTop: '6px' }}>{geocodingError}</div>
+                    <div
+                      className="form-hint"
+                      style={{ color: "#ef4444", marginTop: "6px" }}
+                    >
+                      {geocodingError}
+                    </div>
                   )}
                 </>
               )}
 
-              {locationMode === 'coordinates' && (
+              {locationMode === "coordinates" && (
                 <>
-                  <div className="form-hint">Enter coordinates or use map to select</div>
+                  <div className="form-hint">
+                    Enter coordinates or use map to select
+                  </div>
                   <div className="location-input">
                     <input
                       type="number"
                       step="any"
                       placeholder="Latitude"
-                      value={formData.location.lat || ''}
-                      onChange={(e) => setFormData({ 
-                        ...formData, 
-                        location: { ...formData.location, lat: parseFloat(e.target.value) || 0 }
-                      })}
+                      value={formData.location.lat || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          location: {
+                            ...formData.location,
+                            lat: parseFloat(e.target.value) || 0,
+                          },
+                        })
+                      }
                       required
                     />
                     <input
                       type="number"
                       step="any"
                       placeholder="Longitude"
-                      value={formData.location.lng || ''}
-                      onChange={(e) => setFormData({ 
-                        ...formData, 
-                        location: { ...formData.location, lng: parseFloat(e.target.value) || 0 }
-                      })}
+                      value={formData.location.lng || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          location: {
+                            ...formData.location,
+                            lng: parseFloat(e.target.value) || 0,
+                          },
+                        })
+                      }
                       required
                     />
                   </div>
@@ -275,7 +340,9 @@ const CreateReportModal = ({ isOpen, onClose, onSubmit }: CreateReportModalProps
               <label>Description</label>
               <textarea
                 value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
                 placeholder="Provide additional details about the issue..."
               />
             </div>
@@ -289,10 +356,22 @@ const CreateReportModal = ({ isOpen, onClose, onSubmit }: CreateReportModalProps
                   multiple
                   onChange={handleImageUpload}
                 />
-                <svg className="upload-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                <svg
+                  className="upload-icon"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                  />
                 </svg>
-                <div className="upload-text">Click to upload or drag and drop</div>
+                <div className="upload-text">
+                  Click to upload or drag and drop
+                </div>
                 <div className="upload-subtext">PNG, JPG, GIF up to 10MB</div>
               </div>
               {images.length > 0 && (
