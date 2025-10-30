@@ -43,8 +43,8 @@ function App() {
           if (!isCancelled) setNetworkError(true);
           return;
         }
-        const resp = await fetch(API_ENDPOINTS.REPORTS, {
-          method: 'HEAD',
+        const resp = await fetch(API_ENDPOINTS.HEALTH, {
+          method: 'GET',
           cache: 'no-store',
         });
         if (!isCancelled) {
