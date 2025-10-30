@@ -8,21 +8,12 @@ import {
 } from "react-leaflet";
 import { ThumbsUp, ChevronLeft, ChevronRight } from 'lucide-react';
 import "./MapView.css";
-<<<<<<< HEAD
 import type { LatLngExpression } from "leaflet";
 import L from "leaflet";
 import "leaflet.heat";
 import MarkerClusterGroup from "react-leaflet-markercluster";
 import { useEffect, useRef, useState } from "react";
 import { severityToIntensity, type Report } from "../types/report";
-=======
-import { type LatLngExpression } from "leaflet";
-import L from 'leaflet';
-import MarkerClusterGroup from "react-leaflet-markercluster";
-import "./MapView.css";
-import type { Report } from "../types/report";
-import { useEffect, useRef, useState } from "react";
->>>>>>> 145167a2bb027cf60865b28b74f48b41ba3d135c
 import { getSeverityColor, getIconSize, getGlowRadius, getCategoryIconPath } from "../utils/reportUtils";
 
 interface MapViewProps {
@@ -306,7 +297,6 @@ const MapView = ({ reports, onReportClick }: MapViewProps) => {
         </div>
       </div>
 
-<<<<<<< HEAD
       {showHeatmap ? (
         <HeatmapLayer points={heatPoints} />
       ) : (
@@ -320,22 +310,6 @@ const MapView = ({ reports, onReportClick }: MapViewProps) => {
               position={[report.location.lat, report.location.lng]}
               icon={createCustomIcon(report)}
               ref={(ref) => void (markerRefs.current[report.id] = ref)}
-=======
-      <MarkerClusterGroup>
-        {reports.map((report) => {
-          const hasMedia = report.images && report.images.length > 0;
-          const currentIndex = currentImageIndex[report.id] || 0;
-          const hasGif = hasMedia && report.images.some(img => isVideo(img));
-
-          return (
-            <Marker
-              key={report.id}
-              position={[report.location.lat, report.location.lng]}
-              icon={createCustomIcon(report)}
-              ref={(ref) => {
-                markerRefs.current[report.id] = ref;
-              }}
->>>>>>> 145167a2bb027cf60865b28b74f48b41ba3d135c
               eventHandlers={{
                 mouseover: () => handleMarkerMouseOver(report.id),
                 mouseout: () => handleMarkerMouseOut(report.id),
@@ -359,110 +333,12 @@ const MapView = ({ reports, onReportClick }: MapViewProps) => {
                   </span>
                   <br />
                   
-<<<<<<< HEAD
                   <ReportMedia
                     report={report}
                     currentImageIndex={currentIndex}
                     onPrev={(e) => prevImage(report.id, report.images.length, e)}
                     onNext={(e) => nextImage(report.id, report.images.length, e)}
                   />
-=======
-                  {/* Media Display */}
-                  {hasMedia && (
-                    <div style={{ marginTop: '10px', marginBottom: '10px' }}>
-                      {hasGif ? (
-                        <div style={{ position: 'relative' }}>
-                          {report.images.filter(img => isVideo(img)).map((gif, idx) => (
-                            <img
-                              key={idx}
-                              src={gif}
-                              alt="Report media"
-                              style={{
-                                width: '100%',
-                                maxHeight: '200px',
-                                objectFit: 'cover',
-                                borderRadius: '8px'
-                              }}
-                            />
-                          ))[0]}
-                        </div>
-                      ) : (
-                        <div style={{ position: 'relative' }}>
-                          <img
-                            src={report.images[currentIndex]}
-                            alt={`Report image ${currentIndex + 1}`}
-                            style={{
-                              width: '100%',
-                              maxHeight: '200px',
-                              objectFit: 'cover',
-                              borderRadius: '8px'
-                            }}
-                          />
-                          
-                          {report.images.length > 1 && (
-                            <>
-                              <button
-                                onClick={(e) => prevImage(report.id, report.images.length, e)}
-                                style={{
-                                  position: 'absolute',
-                                  left: '5px',
-                                  top: '50%',
-                                  transform: 'translateY(-50%)',
-                                  background: 'rgba(255, 255, 255, 0.8)',
-                                  border: 'none',
-                                  borderRadius: '50%',
-                                  width: '32px',
-                                  height: '32px',
-                                  cursor: 'pointer',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                                }}
-                              >
-                                <ChevronLeft size={20} />
-                              </button>
-                              <button
-                                onClick={(e) => nextImage(report.id, report.images.length, e)}
-                                style={{
-                                  position: 'absolute',
-                                  right: '5px',
-                                  top: '50%',
-                                  transform: 'translateY(-50%)',
-                                  background: 'rgba(255, 255, 255, 0.8)',
-                                  border: 'none',
-                                  borderRadius: '50%',
-                                  width: '32px',
-                                  height: '32px',
-                                  cursor: 'pointer',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                                }}
-                              >
-                                <ChevronRight size={20} />
-                              </button>
-                              
-                              <div style={{
-                                position: 'absolute',
-                                bottom: '8px',
-                                right: '8px',
-                                background: 'rgba(0, 0, 0, 0.6)',
-                                color: 'white',
-                                padding: '4px 8px',
-                                borderRadius: '12px',
-                                fontSize: '12px'
-                              }}>
-                                {currentIndex + 1} / {report.images.length}
-                              </div>
-                            </>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )}
->>>>>>> 145167a2bb027cf60865b28b74f48b41ba3d135c
                   
                   <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '8px' }}>
                     <ThumbsUp size={16} /> {report.upvotes}
@@ -470,16 +346,10 @@ const MapView = ({ reports, onReportClick }: MapViewProps) => {
                 </div>
               </Popup>
             </Marker>
-<<<<<<< HEAD
             )
           })}
         </MarkerClusterGroup>
       )}
-=======
-          );
-        })}
-      </MarkerClusterGroup>
->>>>>>> 145167a2bb027cf60865b28b74f48b41ba3d135c
     </MapContainer>
   );
 };

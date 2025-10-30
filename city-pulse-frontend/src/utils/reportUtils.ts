@@ -39,7 +39,7 @@ export const getCategoryIconPath = (category: ReportCategory): string => {
     OTHER: otherIcon
   };
   
-  return icons[category];
+  return icons[category] || otherIcon;
 };
 
 // Calculate glow size based on upvotes
