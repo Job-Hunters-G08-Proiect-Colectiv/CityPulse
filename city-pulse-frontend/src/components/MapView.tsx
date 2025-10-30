@@ -6,7 +6,7 @@ import {
   ZoomControl,
   useMap,
 } from "react-leaflet";
-import { ThumbsUp, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ThumbsUp, ChevronLeft, ChevronRight } from "lucide-react";
 import "./MapView.css";
 import type { LatLngExpression } from "leaflet";
 import L from "leaflet";
@@ -14,7 +14,12 @@ import "leaflet.heat";
 import MarkerClusterGroup from "react-leaflet-markercluster";
 import { useEffect, useRef, useState } from "react";
 import { severityToIntensity, type Report } from "../types/report";
-import { getSeverityColor, getIconSize, getGlowRadius, getCategoryIconPath } from "../utils/reportUtils";
+import {
+  getSeverityColor,
+  getIconSize,
+  getGlowRadius,
+  getCategoryIconPath,
+} from "../utils/reportUtils";
 
 interface MapViewProps {
   reports: Report[];
@@ -49,16 +54,22 @@ function HeatmapLayer({ points }: { points: [number, number, number?][] }) {
   return null;
 }
 
-// Create custom icon with glow effect
 const createCustomIcon = (report: Report) => {
   const iconPath = getCategoryIconPath(report.category);
   const color = getSeverityColor(report.severityLevel);
   const glowRadius = getGlowRadius(report.upvotes);
   const iconSize = getIconSize(report.upvotes);
-  
-  const glowStyle = glowRadius > 0 
-    ? `filter: drop-shadow(0 0 ${glowRadius * 0.2}px ${color}) drop-shadow(0 0 ${glowRadius * 0.4}px ${color}) drop-shadow(0 0 ${glowRadius * 0.7}px ${color}) drop-shadow(0 0 ${glowRadius}px ${color});`
-    : '';
+
+  const glowStyle =
+    glowRadius > 0
+      ? `filter: drop-shadow(0 0 ${
+          glowRadius * 0.2
+        }px ${color}) drop-shadow(0 0 ${
+          glowRadius * 0.4
+        }px ${color}) drop-shadow(0 0 ${
+          glowRadius * 0.7
+        }px ${color}) drop-shadow(0 0 ${glowRadius}px ${color});`
+      : "";
 
   const html = `
     <div style="
@@ -70,7 +81,9 @@ const createCustomIcon = (report: Report) => {
       align-items: center;
       justify-content: center;
     ">
-      <svg width="${iconSize * 1.8}" height="${iconSize * 1.8}" viewBox="0 0 24 32" fill="none" xmlns="http://www.w3.org/2000/svg"
+      <svg width="${iconSize * 1.8}" height="${
+    iconSize * 1.8
+  }" viewBox="0 0 24 32" fill="none" xmlns="http://www.w3.org/2000/svg"
            style="position: absolute; z-index: 1;">
         <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" 
               fill="${color}" 
@@ -96,82 +109,96 @@ const createCustomIcon = (report: Report) => {
 
   return L.divIcon({
     html: html,
-    className: 'custom-marker-icon',
+    className: "custom-marker-icon",
     iconSize: [iconSize, iconSize * 1.3],
     iconAnchor: [iconSize / 2, iconSize * 1.3],
-    popupAnchor: [0, -iconSize * 1.3]
+    popupAnchor: [0, -iconSize * 1.3],
   });
 };
 
-// Check if a file is a video/gif based on its extension
 const isVideo = (filename: string) => {
-  return filename.toLowerCase().endsWith('.gif') ||
-         filename.toLowerCase().endsWith('.mp4') ||
-         filename.toLowerCase().endsWith('.webm');
+  return (
+    filename.toLowerCase().endsWith(".gif") ||
+    filename.toLowerCase().endsWith(".mp4") ||
+    filename.toLowerCase().endsWith(".webm")
+  );
 };
 
-interface ReportMediaProps {
-  report: Report;
-  currentImageIndex: number;
-  onPrev: (e: React.MouseEvent) => void;
-  onNext: (e: React.MouseEvent) => void;
-}
-
-const ReportMedia = ({ report, currentImageIndex, onPrev, onNext }: ReportMediaProps) => {
+const ReportMedia = ({ report }: { report: Report }) => {
   const hasMedia = report.images && report.images.length > 0;
+  const [index, setIndex] = useState(0);
   if (!hasMedia) return null;
 
   const gif = report.images.find(isVideo);
 
+  const next = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIndex((i) => (i + 1) % report.images.length);
+  };
+
+  const prev = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIndex((i) => (i - 1 + report.images.length) % report.images.length);
+  };
+
   const imageStyle: React.CSSProperties = {
-    width: '100%',
-    maxHeight: '200px',
-    objectFit: 'cover',
-    borderRadius: '8px'
+    width: "100%",
+    maxHeight: "200px",
+    objectFit: "cover",
+    borderRadius: "8px",
   };
 
   const buttonStyle: React.CSSProperties = {
-    position: 'absolute',
-    top: '50%',
-    transform: 'translateY(-50%)',
-    background: 'rgba(255, 255, 255, 0.8)',
-    border: 'none',
-    borderRadius: '50%',
-    width: '32px',
-    height: '32px',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+    position: "absolute",
+    top: "50%",
+    transform: "translateY(-50%)",
+    background: "rgba(255, 255, 255, 0.8)",
+    border: "none",
+    borderRadius: "50%",
+    width: "32px",
+    height: "32px",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
   };
 
   return (
-    <div style={{ marginTop: '10px', marginBottom: '10px', position: 'relative' }}>
+    <div
+      style={{ marginTop: "10px", marginBottom: "10px", position: "relative" }}
+      onClick={(e) => e.stopPropagation()}
+    >
       {gif ? (
         <img src={gif} alt="Report media" style={imageStyle} />
       ) : (
         <>
-          <img src={report.images[currentImageIndex]} alt={`Report image ${currentImageIndex + 1}`} style={imageStyle} />
+          <img
+            src={report.images[index]}
+            alt={`Report image ${index + 1}`}
+            style={imageStyle}
+          />
           {report.images.length > 1 && (
             <>
-              <button onClick={onPrev} style={{ ...buttonStyle, left: '5px' }}>
+              <button onClick={prev} style={{ ...buttonStyle, left: "5px" }}>
                 <ChevronLeft size={20} />
               </button>
-              <button onClick={onNext} style={{ ...buttonStyle, right: '5px' }}>
+              <button onClick={next} style={{ ...buttonStyle, right: "5px" }}>
                 <ChevronRight size={20} />
               </button>
-              <div style={{
-                position: 'absolute',
-                bottom: '8px',
-                right: '8px',
-                background: 'rgba(0, 0, 0, 0.6)',
-                color: 'white',
-                padding: '4px 8px',
-                borderRadius: '12px',
-                fontSize: '12px'
-              }}>
-                {currentImageIndex + 1} / {report.images.length}
+              <div
+                style={{
+                  position: "absolute",
+                  bottom: "8px",
+                  right: "8px",
+                  background: "rgba(0, 0, 0, 0.6)",
+                  color: "white",
+                  padding: "4px 8px",
+                  borderRadius: "12px",
+                  fontSize: "12px",
+                }}
+              >
+                {index + 1} / {report.images.length}
               </div>
             </>
           )}
@@ -186,76 +213,15 @@ const MapView = ({ reports, onReportClick }: MapViewProps) => {
     reports.length > 0
       ? [reports[0].location.lat, reports[0].location.lng]
       : [46.77, 23.62];
+
   const topLeftBound = L.latLng(46.876, 23.323);
   const bottomRightBound = L.latLng(46.688, 23.781);
   const maxBounds = L.latLngBounds(topLeftBound, bottomRightBound);
+
   const markerRefs = useRef<Record<number, L.Marker | null>>({});
-  const [currentImageIndex, setCurrentImageIndex] = useState<{ [key: number]: number }>({}); // State to track images on carousel
-  const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null); // Timeout id
-
-  // Handler for image carousel navigation:
-  const nextImage = (reportId: number, totalImages: number, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setCurrentImageIndex(prev => ({
-      ...prev,
-      [reportId]: ((prev[reportId] || 0) + 1) % totalImages
-    }));
-  };
-
-  // Same as previous handler but goes backward
-  const prevImage = (reportId: number, totalImages: number, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setCurrentImageIndex(prev => ({
-      ...prev,
-      [reportId]: ((prev[reportId] || 0) - 1 + totalImages) % totalImages
-    }));
-  };
-
-  // Cancel the pending timeout (popup about to close) and open the popup
-  const handleMarkerMouseOver = (reportId: number) => {
-    if (hoverTimeoutRef.current !== null) {
-      clearTimeout(hoverTimeoutRef.current);
-    }
-    if (markerRefs.current[reportId]) {
-      markerRefs.current[reportId].openPopup();
-    }
-  };
-
-  // Start a timeout to close the popup after a delay when mouse leaves the marker
-  const handleMarkerMouseOut = (reportId: number) => {
-    hoverTimeoutRef.current = setTimeout(() => {
-      if (markerRefs.current[reportId]) {
-        markerRefs.current[reportId].closePopup();
-      }
-    }, 300); // 300 ms delay before closing
-  };
-
-  // Cancel the pending timeout when mouse hover over the popup
-  const handlePopupMouseEnter = () => {
-    if (hoverTimeoutRef.current !== null) {
-      clearTimeout(hoverTimeoutRef.current);
-    }
-  };
-
-  // Start a timeout to close the popup after a delay when mouse leaves the popup
-  const handlePopupMouseLeave = (reportId: number) => {
-    hoverTimeoutRef.current = setTimeout(() => {
-      if (markerRefs.current[reportId]) {
-        markerRefs.current[reportId].closePopup();
-      }
-    }, 300);
-  };
-
-  // Clear timeout on component unmount
-  useEffect(() => {
-    return () => {
-      if (hoverTimeoutRef.current !== null) {
-        clearTimeout(hoverTimeoutRef.current);
-      }
-    };
-  }, []);
-
+  const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [showHeatmap, setShowHeatmap] = useState(false);
+
   const heatPoints = reports.map(
     (r) =>
       [
@@ -265,16 +231,50 @@ const MapView = ({ reports, onReportClick }: MapViewProps) => {
       ] as [number, number, number]
   );
 
+  const handleMarkerMouseOver = (id: number) => {
+    if (hoverTimeoutRef.current !== null) clearTimeout(hoverTimeoutRef.current);
+    markerRefs.current[id]?.openPopup();
+  };
+
+  const handleMarkerMouseOut = (id: number) => {
+    hoverTimeoutRef.current = setTimeout(() => {
+      markerRefs.current[id]?.closePopup();
+    }, 300);
+  };
+
+  const handlePopupMouseEnter = () => {
+    if (hoverTimeoutRef.current !== null) clearTimeout(hoverTimeoutRef.current);
+  };
+
+  const handlePopupMouseLeave = (id: number) => {
+    hoverTimeoutRef.current = setTimeout(() => {
+      markerRefs.current[id]?.closePopup();
+    }, 300);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (hoverTimeoutRef.current !== null)
+        clearTimeout(hoverTimeoutRef.current);
+    };
+  }, []);
+
   return (
-    <MapContainer center={position} minZoom={12} zoom={13} id="map" zoomControl={false} maxBounds={maxBounds} doubleClickZoom={false}>
+    <MapContainer
+      center={position}
+      minZoom={12}
+      zoom={13}
+      id="map"
+      zoomControl={false}
+      maxBounds={maxBounds}
+      doubleClickZoom={false}
+    >
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution="OpenStreetMap contributors"
       />
-
       <ZoomControl position="topright" />
       center={position}
-
       <div
         className="leaflet-top leaflet-right"
         style={{ zIndex: 1000, marginTop: "80px" }}
@@ -296,16 +296,12 @@ const MapView = ({ reports, onReportClick }: MapViewProps) => {
           </button>
         </div>
       </div>
-
       {showHeatmap ? (
         <HeatmapLayer points={heatPoints} />
       ) : (
         <MarkerClusterGroup>
-          {reports.map((report) => {
-            const currentIndex = currentImageIndex[report.id] || 0; // Get current image index for this report
-
-            return (
-              <Marker
+          {reports.map((report) => (
+            <Marker
               key={report.id}
               position={[report.location.lat, report.location.lng]}
               icon={createCustomIcon(report)}
@@ -313,41 +309,43 @@ const MapView = ({ reports, onReportClick }: MapViewProps) => {
               eventHandlers={{
                 mouseover: () => handleMarkerMouseOver(report.id),
                 mouseout: () => handleMarkerMouseOut(report.id),
-                click: () => {
-                  onReportClick(report)
-                },
+                click: () => onReportClick(report),
               }}
             >
               <Popup maxWidth={300} minWidth={250}>
-                <div style={{ padding: '8px' }}
-                    onMouseEnter={handlePopupMouseEnter}
-                    onMouseLeave={() => handlePopupMouseLeave(report.id)}>
-                  <b style={{ fontSize: '16px' }}>{report.name}</b>
+                <div
+                  style={{ padding: "8px" }}
+                  onClick={(e) => e.stopPropagation()}
+                  onMouseEnter={handlePopupMouseEnter}
+                  onMouseLeave={() => handlePopupMouseLeave(report.id)}
+                >
+                  <b style={{ fontSize: "16px" }}>{report.name}</b>
                   <br />
-                  <span style={{ fontSize: '14px', color: '#666' }}>
+                  <span style={{ fontSize: "14px", color: "#666" }}>
                     Category: {report.category}
                   </span>
                   <br />
-                  <span style={{ fontSize: '14px', color: '#666' }}>
+                  <span style={{ fontSize: "14px", color: "#666" }}>
                     Severity: {report.severityLevel}
                   </span>
                   <br />
-                  
-                  <ReportMedia
-                    report={report}
-                    currentImageIndex={currentIndex}
-                    onPrev={(e) => prevImage(report.id, report.images.length, e)}
-                    onNext={(e) => nextImage(report.id, report.images.length, e)}
-                  />
-                  
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '8px' }}>
+
+                  <ReportMedia report={report} />
+
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "5px",
+                      marginTop: "8px",
+                    }}
+                  >
                     <ThumbsUp size={16} /> {report.upvotes}
                   </div>
                 </div>
               </Popup>
             </Marker>
-            )
-          })}
+          ))}
         </MarkerClusterGroup>
       )}
     </MapContainer>
