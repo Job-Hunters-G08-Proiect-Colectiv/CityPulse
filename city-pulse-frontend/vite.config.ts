@@ -15,6 +15,15 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     setupFiles: './src/setupTests.ts',
-    globals: true
+    globals: true,
+    reporters: [
+      'default',
+      'html',
+      'junit'
+    ],
+    outputFile: {
+      html: './test-report.html',
+      junit: './test-results.xml'
+    }
   }
 })
