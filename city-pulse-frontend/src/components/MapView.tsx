@@ -14,7 +14,7 @@ import "leaflet.heat";
 import MarkerClusterGroup from "react-leaflet-markercluster";
 import { useEffect, useRef, useState } from "react";
 import { severityToIntensity, type Report } from "../types/report";
-import { getSeverityColor, getIconSize, getGlowRadius, getCategoryIcon } from "../utils/reportUtils";
+import { getSeverityColor, getIconSize, getGlowRadius, getCategoryIconPath } from "../utils/reportUtils";
 
 interface MapViewProps {
   reports: Report[];
@@ -51,31 +51,55 @@ function HeatmapLayer({ points }: { points: [number, number, number?][] }) {
 
 // Create custom icon with glow effect
 const createCustomIcon = (report: Report) => {
-  const icon = getCategoryIcon(report.category);
+  const iconPath = getCategoryIconPath(report.category);
   const color = getSeverityColor(report.severityLevel);
   const glowRadius = getGlowRadius(report.upvotes);
   const iconSize = getIconSize(report.upvotes);
-
-  const glowStyle = glowRadius > 0
-    ? `filter: drop-shadow(0 0 ${glowRadius}px ${color}) drop-shadow(0 0 ${glowRadius * 0.5}px ${color}) drop-shadow(0 0 ${glowRadius * 0.1}px ${color});`
+  
+  const glowStyle = glowRadius > 0 
+    ? `filter: drop-shadow(0 0 ${glowRadius * 0.2}px ${color}) drop-shadow(0 0 ${glowRadius * 0.4}px ${color}) drop-shadow(0 0 ${glowRadius * 0.7}px ${color}) drop-shadow(0 0 ${glowRadius}px ${color});`
     : '';
 
   const html = `
     <div style="
-      font-size: ${iconSize}px;
+      width: ${iconSize}px;
+      height: ${iconSize * 1.3}px;
       ${glowStyle}
-      text-align: center;
-      line-height: 1;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     ">
-      ${icon}
+      <svg width="${iconSize * 1.8}" height="${iconSize * 1.8}" viewBox="0 0 24 32" fill="none" xmlns="http://www.w3.org/2000/svg"
+           style="position: absolute; z-index: 1;">
+        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" 
+              fill="${color}" 
+              stroke="white" 
+              stroke-width="1.5"
+              transform="scale(1)"/>
+      </svg>
+      <img 
+        src="${iconPath}" 
+        style="
+          position: absolute;
+          top: 20%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          width: ${iconSize * 0.5}px;
+          height: ${iconSize * 0.5}px;
+          filter: brightness(0) saturate(100%) invert(100%);
+          z-index: 2;
+        "
+      />
     </div>
   `;
 
   return L.divIcon({
     html: html,
     className: 'custom-marker-icon',
-    iconSize: [iconSize, iconSize],
-    iconAnchor: [iconSize / 2, iconSize / 2],
+    iconSize: [iconSize, iconSize * 1.3],
+    iconAnchor: [iconSize / 2, iconSize * 1.3],
+    popupAnchor: [0, -iconSize * 1.3]
   });
 };
 

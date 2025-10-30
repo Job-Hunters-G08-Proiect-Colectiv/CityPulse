@@ -1,4 +1,9 @@
-import { icon } from "leaflet";
+import potholeIcon from '../assets/pothole.svg';
+import wasteIcon from '../assets/waste.svg';
+import pollutionIcon from '../assets/pollution.svg';
+import lightingIcon from '../assets/lighting.svg';
+import vandalismIcon from '../assets/vandalism.svg';
+import otherIcon from '../assets/other.svg';
 import type { SeverityLevel, ReportCategory } from "../types/report";
 
 // Severity Colors
@@ -13,17 +18,28 @@ export const getSeverityColor = (severity: SeverityLevel): string => {
     return SEVERITY_COLORS[severity];
 };
 
-// Get category icon
-export const getCategoryIcon = (category: ReportCategory): string => {
-    const icons: Record<ReportCategory, string> = {
-        POTHOLE: '🕳️',
-        WASTE: '🗑️',
-        POLLUTION: '☣️',
-        LIGHTING: '💡',
-        VANDALISM: '🔨',
-        OTHER: '⚠️'
-    };
-    return icons[category];
+// Get category icon as SVG
+export const getCategoryIconPath = (category: ReportCategory): string => {
+  const icons: Record<ReportCategory, string> = {
+    POTHOLE: potholeIcon,
+    
+    // Trash bin (keeping the good one)
+    WASTE: wasteIcon,
+    
+    // Smoke/fumes icon for pollution
+    POLLUTION: pollutionIcon,
+    
+    // Street lamp icon
+    LIGHTING: lightingIcon,
+    
+    // Spray paint can icon
+    VANDALISM: vandalismIcon,
+    
+    // Alert/Warning (keeping the good one)
+    OTHER: otherIcon
+  };
+  
+  return icons[category] || otherIcon;
 };
 
 // Calculate glow size based on upvotes
@@ -36,7 +52,7 @@ export const getGlowRadius = (upvotes: number): number => {
 
 // Calculate icon size based on upvotes
 export const getIconSize = (upvotes: number): number => {
-    const baseSize = 32;
+    const baseSize = 40;
     const sizeIncrease = Math.min(Math.floor(upvotes / 5) * 2, 16); // Max +16px
     return baseSize + sizeIncrease;
 };
