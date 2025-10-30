@@ -27,6 +27,10 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
+    if (!navigator.onLine || error.message === 'Network Error' || !error.response) {
+      throw new Error('Network Error');
+    }
+
     if (error.response?.status === 401) {
       localStorage.removeItem('authToken');
       window.location.href = '/login';
