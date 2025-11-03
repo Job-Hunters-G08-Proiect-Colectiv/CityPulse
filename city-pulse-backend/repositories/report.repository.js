@@ -1,263 +1,365 @@
-const getRandom = (arr) => arr[Math.floor(Math.random() * arr.length)];
-const getRandomInt = (min, max) =>
-  Math.floor(Math.random() * (max - min + 1)) + min;
-const getRandomDate = (start, end) =>
-  new Date(
-    start.getTime() + Math.random() * (end.getTime() - start.getTime())
-  ).toISOString();
+const pool = require('../database/db.config');
 
-// Cluj-Napoca bounds
-const clujBounds = {
-  minLat: 46.745,
-  maxLat: 46.785,
-  minLng: 23.55,
-  maxLng: 23.64,
-};
-
-const getRandomLocation = () => ({
-  lat: +(
-    Math.random() * (clujBounds.maxLat - clujBounds.minLat) +
-    clujBounds.minLat
-  ).toFixed(6),
-  lng: +(
-    Math.random() * (clujBounds.maxLng - clujBounds.minLng) +
-    clujBounds.minLng
-  ).toFixed(6),
-});
-
-const categories = [
-  "POTHOLE",
-  "WASTE",
-  "PUBLIC_LIGHTING",
-  "VANDALISM",
-  "PARKING",
-  "TRAFFIC",
-];
-const statuses = [
-  "PENDING",
-  "PENDING",
-  "PENDING",
-  "IN_PROGRESS",
-  "RESOLVED",
-  "RESOLVED",
-];
-
-const severities = ["LOW", "MEDIUM", "MEDIUM", "CRITICAL"];
-const streetNames = [
-  "Calea Moților",
-  "Str. Regele Ferdinand",
-  "Piața Unirii",
-  "B-dul Eroilor",
-  "Str. Memorandumului",
-  "Calea Mănăștur",
-  "Str. Horea",
-  "Piața Mihai Viteazu",
-  "B-dul 21 Decembrie 1989",
-  "Str. Fabricii de Zahăr",
-  "Str. Aurel Vlaicu",
-  "Str. Alexandru Vaida Voevod",
-  "Calea Dorobanților",
-  "Str. Observatorului",
-  "Str. Frunzișului",
-  "Str. Donath",
-  "Str. Traian Vuia",
-  "B-dul Muncii",
-];
-
-const reportTemplates = {
-  POTHOLE: {
-    names: [
-      "Gropă mare pe carosabil",
-      "Asfalt crăpat",
-      "Capac de canal lăsat",
-      "Problemă denivelare",
-    ],
-    descriptions: [
-      "O groapă periculoasă care trebuie reparată urgent.",
-      "Asfaltul este crăpat și s-a lăsat.",
-      "Capacul de canal este sub nivelul străzii și produce zgomot.",
-      "Risc de accidente, groapa e adâncă și plină cu apă.",
-    ],
-  },
-  WASTE: {
-    names: [
-      "Gunoi neridicat",
-      "Containere pline",
-      "Mizerie pe spațiul public",
-      "Deșeuri abandonate",
-    ],
-    descriptions: [
-      "Gunoiul menajer nu a fost ridicat de 3 zile.",
-      "Containerele de colectare selectivă sunt pline.",
-      "Miros neplăcut și mizerie lângă coșurile de gunoi.",
-      "Cineva a aruncat moloz pe spațiul verde de lângă bloc.",
-    ],
-  },
-  PUBLIC_LIGHTING: {
-    names: [
-      "Stâlp de iluminat defect",
-      "Bec ars pe stradă",
-      "Zonă în beznă",
-      "Lumină pâlpâie",
-    ],
-    descriptions: [
-      "Stâlpul acesta nu funcționează de o săptămână.",
-      "E beznă pe toată aleea dintre blocuri.",
-      "Lumina pâlpâie și e deranjant, probabil un scurtcircuit.",
-      "Siguranță scăzută pe timp de noapte, e nevoie de reparație.",
-    ],
-  },
-  VANDALISM: {
-    names: [
-      "Graffiti pe clădire",
-      "Bancă ruptă în parc",
-      "Coș de gunoi distrus",
-      "Stație de autobuz vandalizată",
-    ],
-    descriptions: [
-      "Clădirea istorică a fost mâzgălită cu graffiti.",
-      "Băncile din Parcul Central au fost rupte.",
-      "Geamurile stației de autobuz au fost sparte.",
-      "Cineva a dat foc la coșul de gunoi.",
-    ],
-  },
-  PARKING: {
-    names: [
-      "Mașină parcată pe trotuar",
-      "Blocaj acces auto",
-      "Parcare pe spațiu verde",
-      "Parcare ilegală",
-    ],
-    descriptions: [
-      "O mașină blochează complet trotuarul, pietonii merg pe stradă.",
-      "Accesul în curte/garaj este blocat de un autoturism.",
-      "Parcat pe spațiul verde de lângă locul de joacă.",
-      "Mașină parcată pe trecerea de pietoni.",
-    ],
-  },
-  TRAFFIC: {
-    names: [
-      "Semafor defect",
-      "Indicator rutier lipsă",
-      "Blocaj în intersecție",
-      "Trafic îngreunat",
-    ],
-    descriptions: [
-      "Semaforul din intersecție este blocat pe roșu.",
-      "A dispărut indicatorul 'Cedează Trecerea'.",
-      "Se creează constant ambuteiaje din cauza semaforizării proaste.",
-      "Trecere de pietoni ștearsă, nu se mai vede.",
-    ],
-  },
-};
-
-let reports = [];
-const TOTAL_REPORTS = 25;
-
-for (let i = 0; i < TOTAL_REPORTS; i++) {
-  const category = getRandom(categories);
-  const template = reportTemplates[category];
-  const street = getRandom(streetNames);
-  const address = `${street}, nr. ${getRandomInt(1, 150)}, Cluj-Napoca`;
-
-  reports.push({
-    id: i + 1,
-    name: getRandom(template.names),
-    date: getRandomDate(new Date(2025, 8, 1), new Date(2025, 9, 27)),
-    location: getRandomLocation(),
-    address: address,
-    images: [],
-    category: category,
-    status: getRandom(statuses),
-    severityLevel: getRandom(severities),
-    upvotes: getRandomInt(0, 75),
-    description: getRandom(template.descriptions),
-  });
-}
-
-let nextId = TOTAL_REPORTS + 1;
-
-const findAll = (filters = {}) => {
+// Find all reports with optional filters
+const findAll = async (filters = {}) => {
   const { category, status, severity, search } = filters;
 
-  let filteredReports = [...reports];
+  let query = `
+    SELECT
+      r.id,
+      r.name,
+      r.date,
+      r.location_lat,
+      r.location_lng,
+      r.address,
+      r.category,
+      r.severity_level AS "severityLevel",
+      r.status,
+      r.upvotes,
+      r.description,
+      r.created_by AS "createdBy",
+      COALESCE(
+        json_agg(
+          DISTINCT ri.image_url
+          ORDER BY ri.image_url
+        ) FILTER (WHERE ri.image_url IS NOT NULL),
+        '[]'
+      ) AS images
+    FROM reports r
+    LEFT JOIN report_images ri ON r.id = ri.report_id
+    WHERE 1=1
+  `;
+
+  const params = [];
+  let paramCounter = 1;
 
   if (category) {
-    filteredReports = filteredReports.filter(
-      (report) => report.category === category
-    );
+    query += ` AND r.category = $${paramCounter}`;
+    params.push(category);
+    paramCounter++;
   }
 
   if (status) {
-    filteredReports = filteredReports.filter(
-      (report) => report.status === status
-    );
+    query += ` AND r.status = $${paramCounter}`;
+    params.push(status);
+    paramCounter++;
   }
 
   if (severity) {
-    filteredReports = filteredReports.filter(
-      (report) => report.severityLevel === severity
-    );
+    query += ` AND r.severity_level = $${paramCounter}`;
+    params.push(severity);
+    paramCounter++;
   }
 
-  // search functionality
   if (search) {
-    const searchLower = search.toLowerCase();
-    filteredReports = filteredReports.filter(
-      (report) =>
-        report.name.toLowerCase().includes(searchLower) ||
-        report.address.toLowerCase().includes(searchLower) ||
-        (report.description &&
-          report.description.toLowerCase().includes(searchLower))
-    );
+    query += ` AND (
+      LOWER(r.name) LIKE $${paramCounter} OR
+      LOWER(r.address) LIKE $${paramCounter} OR
+      LOWER(r.description) LIKE $${paramCounter}
+      )`;
+    params.push(`%${search.toLowerCase()}%`);
+    paramCounter++;
   }
 
-  return filteredReports;
-};
+  query += `
+    GROUP BY r.id, r.name, r.date, r.location_lat, r.location_lng, r.address,
+      r.category, r.severity_level, r.status, r.upvotes, r.description, r.created_by
+      ORDER BY r.date DESC
+      `;
 
-const findById = (id) => {
-  return reports.find((report) => report.id === id);
-};
+  try {
+    const result = await pool.query(query, params);
 
-const updateById = (id, dataToUpdate) => {
-  const reportIndex = reports.findIndex((report) => report.id === id);
-  if (reportIndex === -1) {
-    return null;
+    // Transform database format to application format
+    return result.rows.map(row => ({
+      id: row.id,
+      name: row.name,
+      date: row.date,
+      location: {
+        lat: row.location_lat,
+        lng: row.location_lng
+      },
+      address: row.address,
+      category: row.category,
+      severityLevel: row.severityLevel,
+      status: row.status,
+      upvotes: row.upvotes,
+      description: row.description,
+      images: row.images || [],
+      createdBy: row.createdBy
+    }));
+  } catch (error) {
+    console.error('Database error in findAll:', error);
+    throw error;
   }
-
-  // keeping original report to allow partial updates
-  const originalReport = reports[reportIndex];
-  const updatedReport = {
-    ...originalReport,
-    ...dataToUpdate,
-  };
-
-  reports[reportIndex] = updatedReport;
-  return updatedReport;
 };
 
-const create = (reportModel) => {
-  reportModel.id = nextId++;
-  reportModel.date = new Date().toISOString();
+// Find report by ID
+const findById = async (id) => {
+  const query = `
+    SELECT
+      r.id,
+      r.name,
+      r.date,
+      r.location_lat,
+      r.location_lng,
+      r.address,
+      r.category,
+      r.severity_level AS "severityLevel",
+      r.status,
+      r.upvotes,
+      r.description,
+      r.created_by AS "createdBy",
+      COALESCE(
+        json_agg(
+          DISTINCT ri.image_url
+          ORDER BY ri.image_url
+        ) FILTER (WHERE ri.image_url IS NOT NULL),
+        '[]'
+      ) AS images
+    FROM reports r
+    LEFT JOIN report_images ri ON r.id = ri.report_id
+    WHERE r.id = $1
+    GROUP BY r.id
+  `;
 
-  reports.push(reportModel);
-  return reportModel;
-};
+  try {
+    const result = await pool.query(query, [id]);
 
-const deleteById = (id) => {
-  const reportIndex = reports.findIndex((report) => report.id === id);
-  if (reportIndex === -1) {
-    return false;
+    if (result.rows.length === 0) {
+      return null;
+    }
+
+    const row = result.rows[0];
+    return {
+      id: row.id,
+      name: row.name,
+      date: row.date,
+      location: {
+        lat: row.location_lat,
+        lng: row.location_lng
+      },
+      address: row.address,
+      category: row.category,
+      severityLevel: row.severityLevel,
+      status: row.status,
+      upvotes: row.upvotes,
+      description: row.description,
+      images: row.images || [],
+      createdBy: row.createdBy
+    };
+  } catch (error) {
+    console.error('Database error in findById:', error);
+    throw error;
   }
-  reports.splice(reportIndex, 1);
-  return true;
 };
 
-// Export so that they can be used by service
+// Create new report
+const create = async (reportModel) => {
+  const client = await pool.connect();
+
+  try {
+    await client.query('BEGIN');
+
+    // Insert report
+    const insertReportQuery = `
+      INSERT INTO reports (
+        name, location_lat, location_lng, address,
+        category, severity_level, status, description, upvotes
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      RETURNING *
+    `;
+     
+    const reportResult = await client.query(insertReportQuery, [
+      reportModel.name,
+      reportModel.location.lat,
+      reportModel.location.lng,
+      reportModel.address,
+      reportModel.category,
+      reportModel.severityLevel,
+      reportModel.status,
+      reportModel.description || null,
+      reportModel.upvotes
+    ]);
+
+    const newReport = reportResult.rows[0];
+
+    // Insert images if any
+    if (reportModel.images && reportModel.images.length > 0) {
+      const insertImageQuery = `
+        INSERT INTO report_images (report_id, image_url)
+        VALUES ($1, $2)
+      `;
+
+      for (const imageUrl of reportModel.images) {
+        await client.query(insertImageQuery, [newReport.id, imageUrl]);
+      }
+    }
+
+    await client.query('COMMIT');
+
+    // Return formatted report
+    return {
+      id: newReport.id,
+      name: newReport.name,
+      date: newReport.date,
+      location: {
+        lat: newReport.location_lat,
+        lng: newReport.location_lng
+      },
+      address: newReport.address,
+      category: newReport.category,
+      severityLevel: newReport.severity_level,
+      status: newReport.status,
+      upvotes: newReport.upvotes,
+      description: newReport.description,
+      images: reportModel.images || []
+    };
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Database error in create:', error);
+    throw error;
+  } finally {
+    client.release();
+  }
+};
+
+// Update report by ID
+const updateById = async (id, dataToUpdate) => {
+  const client = await pool.connect();
+
+  try {
+     await client.query('BEGIN');
+
+     // Build dynamic UPDATE query
+     const fields = [];
+     const values = [];
+     let paramCounter = 1;
+
+     if (dataToUpdate.name !== undefined) {
+      fields.push(`name = $${paramCounter}`);
+      values.push(dataToUpdate.name);
+      paramCounter++;
+     }
+
+     if (dataToUpdate.location !== undefined) {
+      if (dataToUpdate.location.lat !== undefined) {
+        fields.push(`location_lat = $${paramCounter}`);
+        values.push(dataToUpdate.location.lat);
+        paramCounter++;
+      }
+      if (dataToUpdate.location.lng !== undefined) {
+        fields.push(`location_lng = $${paramCounter}`);
+        values.push(dataToUpdate.location.lng);
+        paramCounter++;
+     }
+    }
+
+    if (dataToUpdate.address !== undefined) {
+        fields.push(`address = $${paramCounter}`);
+        values.push(dataToUpdate.address);
+        paramCounter++;
+    }
+        
+    if (dataToUpdate.category !== undefined) {
+        fields.push(`category = $${paramCounter}`);
+        values.push(dataToUpdate.category);
+        paramCounter++;
+    }
+    
+    if (dataToUpdate.severityLevel !== undefined) {
+        fields.push(`severity_level = $${paramCounter}`);
+        values.push(dataToUpdate.severityLevel);
+        paramCounter++;
+    }
+        
+    if (dataToUpdate.status !== undefined) {
+        fields.push(`status = $${paramCounter}`);
+        values.push(dataToUpdate.status);
+        paramCounter++;
+    }
+        
+    if (dataToUpdate.description !== undefined) {
+        fields.push(`description = $${paramCounter}`);
+        values.push(dataToUpdate.description);
+        paramCounter++;
+    }
+        
+    if (dataToUpdate.upvotes !== undefined) {
+        fields.push(`upvotes = $${paramCounter}`);
+        values.push(dataToUpdate.upvotes);
+        paramCounter++;
+    }
+        
+    if (fields.length === 0) {
+        await client.query('COMMIT');
+        return await findById(id);
+    }
+
+    values.push(id);
+    const updateQuery = `
+      UPDATE reports
+      SET ${fields.join(', ')}
+      WHERE id = $${paramCounter}
+      RETURNING *
+    `;
+
+    const result = await client.query(updateQuery, values);
+
+    if (result.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return null;
+    }
+
+    // Updated images if provided
+    if (dataToUpdate.images !== undefined) {
+      // Delete existing images
+      await client.query('DELETE FROM report_images WHERE report_id = $1', [id]);
+
+      // Insert new images
+      if (dataToUpdate.images.length > 0) {
+        const insertImageQuery = `
+          INSERT INTO report_images (report_id, image_url)
+          VALUES ($1, $2)
+        `;
+
+        for (const imageUrl of dataToUpdate.images) {
+          await client.query(insertImageQuery, [id, imageUrl]);
+        }
+      }
+    }
+
+    await client.query('COMMIT');
+
+    // Fetch and return complete updated report
+    return await findById(id);
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Database error in updateById:', error);
+    throw error;
+  } finally {
+    client.release();
+  }
+};
+
+// Delete report by ID
+const deleteById = async (id) => {
+  const query = 'DELETE FROM reports WHERE id = $1 RETURNING id';
+
+  try {
+    const result = await pool.query(query, [id]);
+    return result.rows.length > 0;
+  } catch (error) {
+    console.error('Database error in deleteById:', error);
+    throw error;
+  }
+};
+
 module.exports = {
   findAll,
   findById,
   create,
-  deleteById,
   updateById,
+  deleteById
 };
