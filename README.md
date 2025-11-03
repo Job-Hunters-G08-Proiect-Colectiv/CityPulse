@@ -7,6 +7,7 @@
 ## Run locally
 ### Backend
 ```bash
+!! FOR DATABASE SETUP CHECK README.md IN THE city-pulse-backend FOLDER !!
 cd city-pulse-backend
 npm install
 npm run dev
