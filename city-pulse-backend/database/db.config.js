@@ -1,5 +1,6 @@
 const { Pool } = require('pg');
 
+// !! IMPORTANT !! - Instead of changing credentials here, set them in the .env file at the backend root! //
 // Database connection configuration
 const pool = new Pool({
     user: process.env.DB_USER || 'postgres',

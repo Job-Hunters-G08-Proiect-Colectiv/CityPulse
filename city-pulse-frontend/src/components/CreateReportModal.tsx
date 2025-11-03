@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import type { Report, ReportCategory, SeverityLevel } from "../types/report";
 import "./CreateReportModal.css";
+import { getImageUrl } from "../utils/imageUtils";
 
 interface CreateReportModalProps {
   isOpen: boolean;
@@ -131,13 +132,30 @@ const CreateReportModal = ({
     onClose();
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (files) {
-      const newImages = Array.from(files).map((file) =>
-        URL.createObjectURL(file)
-      );
-      setImages([...images, ...newImages]);
+    if (!files) return;
+
+    const uploadFormData = new FormData();
+    Array.from(files).forEach((file) => {
+      uploadFormData.append("images", file);
+    });
+
+    try {
+      const response = await fetch("http://localhost:3000/api/upload/images", {
+        method: "POST",
+        body: uploadFormData,
+      });
+
+      if (!response.ok) {
+        throw new Error("Image upload failed");
+      }
+
+      const data = await response.json();
+      setImages([...images, ...data.imageUrls]); // Store actual URLs
+    } catch (error) {
+      console.error("Error uploading images:", error);
+      alert('Failed to upload images.');
     }
   };
 
@@ -378,7 +396,7 @@ const CreateReportModal = ({
                 <div className="image-preview">
                   {images.map((img, index) => (
                     <div key={index} className="preview-item">
-                      <img src={img} alt={`Preview ${index + 1}`} />
+                      <img src={getImageUrl(img)} alt={`Preview ${index + 1}`} />
                       <button
                         type="button"
                         className="remove-image"

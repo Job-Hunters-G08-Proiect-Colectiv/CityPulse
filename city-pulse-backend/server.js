@@ -2,7 +2,9 @@
 
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const reportRoutes = require('./routes/report.routes');
+const uploadRoutes = require('./routes/upload.routes');
 
 const app = express();
 
@@ -12,6 +14,11 @@ app.use(cors({
     credentials: true
 }));
 app.use(express.json());
+
+app.use('/api/upload', uploadRoutes);
+
+// Server uploaded images statically
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Lightweight health endpoint used by frontend connectivity checks
 app.get('/health', (req, res) => {

@@ -1,6 +1,7 @@
 import type { Report } from '../types/report';
 import { Calendar, MapPin, AlertCircle } from 'lucide-react';
 import { getSeverityColor } from '../utils/reportUtils';
+import { getImageUrl } from '../utils/imageUtils';
 import './ReportCard.css';
 
 interface ReportCardProps {
@@ -47,7 +48,7 @@ const ReportCard = ({ report, onClick }: ReportCardProps) => {
 
       {report.images.length > 0 && (
         <div className="report-images">
-          <img src={report.images[0]} alt={report.name} />
+          <img src={getImageUrl(report.images[0])} alt={report.name} />
           {report.images.length > 1 && (
             <span className="image-count">+{report.images.length - 1}</span>
           )}

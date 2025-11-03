@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { X, Calendar, MapPin, AlertCircle, ChevronLeft, ChevronRight, ThumbsUp } from 'lucide-react';
 import type { Report } from '../types/report';
+import { getImageUrl } from '../utils/imageUtils';
 import './ReportDetailModal.css';
 
 interface ReportDetailModalProps {
@@ -117,7 +118,7 @@ const ReportDetailModal = ({ report, isOpen, onClose, onUpvote }: ReportDetailMo
             <div className="image-gallery">
               <div className="main-image-container">
                 <img 
-                  src={report.images[currentImageIndex]} 
+                  src={getImageUrl(report.images[currentImageIndex])} 
                   alt={`Report image ${currentImageIndex + 1}`}
                   className="main-image"
                 />
@@ -152,7 +153,7 @@ const ReportDetailModal = ({ report, isOpen, onClose, onUpvote }: ReportDetailMo
                       className={`thumbnail ${index === currentImageIndex ? 'active' : ''}`}
                       onClick={() => setCurrentImageIndex(index)}
                     >
-                      <img src={image} alt={`Thumbnail ${index + 1}`} />
+                      <img src={getImageUrl(image)} alt={`Thumbnail ${index + 1}`} />
                     </button>
                   ))}
                 </div>

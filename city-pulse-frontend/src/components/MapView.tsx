@@ -14,6 +14,7 @@ import "leaflet.heat";
 import MarkerClusterGroup from "react-leaflet-markercluster";
 import { useEffect, useRef, useState } from "react";
 import { severityToIntensity, type Report } from "../types/report";
+import { getImageUrl } from "../utils/imageUtils";
 import {
   getSeverityColor,
   getIconSize,
@@ -170,11 +171,11 @@ const ReportMedia = ({ report }: { report: Report }) => {
       onClick={(e) => e.stopPropagation()}
     >
       {gif ? (
-        <img src={gif} alt="Report media" style={imageStyle} />
+        <img src={getImageUrl(gif)} alt="Report media" style={imageStyle} />
       ) : (
         <>
           <img
-            src={report.images[index]}
+            src={getImageUrl(report.images[index])}
             alt={`Report image ${index + 1}`}
             style={imageStyle}
           />
