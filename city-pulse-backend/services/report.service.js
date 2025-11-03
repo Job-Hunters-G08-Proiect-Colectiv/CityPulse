@@ -1,12 +1,12 @@
 const reportRepository = require('../repositories/report.repository');
 const { Report, CATEGORIES, SEVERITIES, STATUSES } = require('../domain/report.domain');
 
-const getAllReports = (filters = {}) => {
-    return reportRepository.findAll(filters);
+const getAllReports = async (filters = {}) => {
+    return await reportRepository.findAll(filters);
 };
 
-const getReportById = (id) => {
-    const report = reportRepository.findById(id);
+const getReportById = async (id) => {
+    const report = await reportRepository.findById(id);
 
     if (!report) {
         throw new Error('Report not found');
@@ -14,7 +14,7 @@ const getReportById = (id) => {
     return report;
 };
 
-const updateReport = (id, dataToUpdate) => {
+const updateReport = async (id, dataToUpdate) => {
     console.log(`Service: Actualizez sesizarea ${id}`);
 
     if (dataToUpdate.status && !STATUSES.includes(dataToUpdate.status)) {
@@ -34,7 +34,7 @@ const updateReport = (id, dataToUpdate) => {
         throw new Error('Images variable must be an array!');
     }
 
-    const updatedReport = reportRepository.updateById(id, dataToUpdate);
+    const updatedReport = await reportRepository.updateById(id, dataToUpdate);
 
     if (!updatedReport) {
         throw new Error('Report not found');
@@ -42,7 +42,7 @@ const updateReport = (id, dataToUpdate) => {
     return updatedReport;
 };
 
-const addNewReport = (reportData) => {
+const addNewReport = async (reportData) => {
     console.log('Service: Adding and verifying new report');
     const { name, location, category, severityLevel, address, images, description } = reportData;
     
@@ -67,12 +67,12 @@ const addNewReport = (reportData) => {
     
     const reportModel = new Report(name, location, category, severityLevel, address, images, description);
 
-    return reportRepository.create(reportModel);
+    return await reportRepository.create(reportModel);
 };
 
-const deleteReport = (id) => {
+const deleteReport = async (id) => {
     console.log(`Service: Deleting report ${id}`);
-    const success = reportRepository.deleteById(id);
+    const success = await reportRepository.deleteById(id);
     if (!success) {
         throw new Error('Report not found'); 
     }
