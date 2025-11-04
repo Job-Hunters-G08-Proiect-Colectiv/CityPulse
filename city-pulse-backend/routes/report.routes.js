@@ -1,23 +1,23 @@
 const express = require('express');
 const router = express.Router();
-const { authenticateToken, isAdmin } = require('../middleware/auth.middleware');
-
 const {
     httpGetAllReports,
-    httpAddNewReport,
-    httpDeleteReport,
+    httpGetReportById,
+    httpCreateReport,
     httpUpdateReport,
-    httpGetReportById
-} = require('../controllers/report.controller.js');
+    httpDeleteReport
+} = require('../controllers/report.controller');
+const { authenticateToken, isAdmin } = require('../middlewares/auth.middleware');
 
-// public routes
+// Public routes (anyone can view reports)
 router.get('/', httpGetAllReports);
 router.get('/:id', httpGetReportById);
 
-router.post('/', authenticateToken, httpAddNewReport);
+// Protected routes (must be logged in to create/update)
+router.post('/', authenticateToken, httpCreateReport);
+router.put('/:id', authenticateToken, httpUpdateReport);
 
-// admin routes
-router.put('/:id', authenticateToken, isAdmin, httpUpdateReport);
+// Admin-only routes
 router.delete('/:id', authenticateToken, isAdmin, httpDeleteReport);
 
 module.exports = router;

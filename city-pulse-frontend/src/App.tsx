@@ -5,6 +5,7 @@ import ReportDetailModal from './components/ReportDetailModal';
 import NewReportButton from './components/NewReportButton';
 import MapContainer from './components/MapContainer';
 import NetworkErrorModal from "./components/NetworkErrorModal";
+import LogoutButton from './components/LogoutButton';
 import { reportService, type CreateReportDto } from './services/reportService';
 import { API_ENDPOINTS } from './config/api';
 import type { Report, ReportCategory, ReportStatus, SeverityLevel } from './types/report';
@@ -173,6 +174,7 @@ function App() {
 
   return (
     <div className="app">
+      <LogoutButton />
       <MapContainer reports={reports} onReportClick={handleReportClick} />
       
       {/* Show refreshing indicator without unmounting UI */}

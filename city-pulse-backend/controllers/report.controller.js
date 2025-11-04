@@ -1,93 +1,78 @@
 const reportService = require('../services/report.service');
 
 const httpGetAllReports = async (req, res) => {
-    const filters = req.query; 
-    
-    console.log('Controller: GET /api/reports with filters:', filters);
-    
     try {
-        const allReports = await reportService.getAllReports(filters); 
-        res.status(200).json(allReports);
+        const filters = {
+            category: req.query.category,
+            status: req.query.status,
+            severityLevel: req.query.severityLevel,
+            search: req.query.search
+        };
+        const reports = await reportService.getAllReports(filters);
+        res.status(200).json(reports);
     } catch (error) {
-        console.error('Error in httpGetAllReports:', error);
-        res.status(500).json({ error: 'Server error' });
+        console.error('Error getting reports:', error);
+        res.status(500).json({ error: 'Failed to fetch reports' });
     }
 };
 
 const httpGetReportById = async (req, res) => {
-    const id = parseInt(req.params.id, 10);
-    console.log(`Controller: GET /api/reports/${id}`);
-    
     try {
-        const report = await reportService.getReportById(id);
+        const report = await reportService.getReportById(req.params.id);
+        if (!report) {
+            return res.status(404).json({ error: 'Report not found' });
+        }
         res.status(200).json(report);
     } catch (error) {
-        if (error.message === 'Report not found') {
-            return res.status(404).json({ error: error.message });
-        }
-        console.error('Error in httpGetReportById:', error);
-        res.status(500).json({ error: 'Server error' });
+        console.error('Error getting report:', error);
+        res.status(500).json({ error: 'Failed to fetch report' });
+    }
+};
+
+const httpCreateReport = async (req, res) => {
+    try {
+        // Get user ID from the authenticated token (added by authenticateToken middleware)
+        const userId = req.user.id;
+        
+        // Use addNewReport instead of createReport
+        const newReport = await reportService.addNewReport(req.body, userId);
+        res.status(201).json(newReport);
+    } catch (error) {
+        console.error('Error creating report:', error);
+        res.status(400).json({ error: error.message || 'Failed to create report' });
     }
 };
 
 const httpUpdateReport = async (req, res) => {
-    const id = parseInt(req.params.id, 10);
-    const dataToUpdate = req.body;
-    console.log(`Controller: PUT /api/reports/${id}`);
-
     try {
-        const updatedReport = await reportService.updateReport(id, dataToUpdate);
+        const updatedReport = await reportService.updateReport(req.params.id, req.body);
+        if (!updatedReport) {
+            return res.status(404).json({ error: 'Report not found' });
+        }
         res.status(200).json(updatedReport);
     } catch (error) {
-        if (error.message.includes('Invalid')) {
-            return res.status(400).json({ error: error.message });
-        }
-        if (error.message === 'Report not found') {
-            return res.status(404).json({ error: error.message });
-        }
-        console.error('Error in httpUpdateReport:', error);
-        res.status(500).json({ error: 'Server error' });
-    }
-};
-
-const httpAddNewReport = async (req, res) => {
-    console.log('Controller: POST /api/reports');
-
-    try {
-        const userId = req.user.id;
-        const newReport = await reportService.addNewReport(req.body, userId);
-        res.status(201).json(newReport);
-    } catch (error) {
-        if (error.message.includes('required') || error.message.includes('Invalid')) {
-            console.log('Validation Error:', error.message);
-            return res.status(400).json({ error: error.message });
-        }
-        
-        console.error('Server Error:', error);
-        res.status(500).json({ error: 'Server error' });
+        console.error('Error updating report:', error);
+        res.status(400).json({ error: error.message || 'Failed to update report' });
     }
 };
 
 const httpDeleteReport = async (req, res) => {
-    const idToDelete = parseInt(req.params.id, 10);
-    console.log(`Controller: DELETE /api/reports/${idToDelete}`);
-    
     try {
-        await reportService.deleteReport(idToDelete);
-        res.status(200).json({ message: 'Report successfully deleted!' });
-    } catch (error) {
-        if (error.message === 'Report not found') {
-            return res.status(404).json({ error: 'Report not found!' });
+        const result = await reportService.deleteReport(req.params.id);
+        if (!result) {
+            return res.status(404).json({ error: 'Report not found' });
         }
-        console.error('Error in httpDeleteReport:', error);
-        res.status(500).json({ error: 'Server error' });
+        res.status(200).json({ message: 'Report deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting report:', error);
+        res.status(500).json({ error: 'Failed to delete report' });
     }
 };
 
 module.exports = {
     httpGetAllReports,
-    httpAddNewReport,
-    httpDeleteReport,
     httpGetReportById,
-    httpUpdateReport
+    httpCreateReport,
+    httpUpdateReport,
+    httpDeleteReport
 };

@@ -1,0 +1,52 @@
+.logout-container {
+  position: fixed;
+  bottom: 20px; /* Closer to the bottom edge */
+  left: 20px; /* Closer to the left edge */
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
+
+.user-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+.logout-button {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.logout-button:hover {
+  background: #dc2626;
+}
+
+@media (max-width: 768px) {
+  .logout-container {
+    bottom: 10px; /* Even closer on mobile */
+    left: 10px;
+    padding: 6px 12px;
+  }
+  
+  .user-name {
+    font-size: 12px;
+  }
+  
+  .logout-button {
+    padding: 4px 10px;
+    font-size: 12px;
+  }
+}

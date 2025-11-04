@@ -1,95 +1,69 @@
+import axiosInstance from '../config/axios';
 import { API_ENDPOINTS } from '../config/api';
 import type { Report, ReportCategory, ReportStatus, SeverityLevel } from '../types/report';
 
 export interface CreateReportDto {
   name: string;
   description?: string;
-  category: string;
-  location: {
-    lat: number;
-    lng: number;
-  };
+  category: ReportCategory;
+  location: { lat: number; lng: number };
   address: string;
-  severityLevel: string;
+  severityLevel: SeverityLevel;
   images?: string[];
 }
 
-export interface ReportFilters {
+export interface UpdateReportDto {
+  name?: string;
+  description?: string;
   category?: ReportCategory;
   status?: ReportStatus;
   severityLevel?: SeverityLevel;
-  search?: string;
+  upvotes?: number;
 }
 
 export const reportService = {
-  async getAllReports(filters?: ReportFilters): Promise<Report[]> {
-    const queryParams = new URLSearchParams();
-    
-    if (filters?.category) {
-      queryParams.append('category', filters.category);
-    }
-    if (filters?.status) {
-      queryParams.append('status', filters.status);
-    }
-    if (filters?.severityLevel) {
-      queryParams.append('severity', filters.severityLevel);
-    }
-    if (filters?.search) {
-      queryParams.append('search', filters.search);
-    }
+  getAllReports: async (filters?: {
+    category?: ReportCategory;
+    status?: ReportStatus;
+    severityLevel?: SeverityLevel;
+    search?: string;
+  }): Promise<Report[]> => {
+    const params = new URLSearchParams();
+    if (filters?.category) params.append('category', filters.category);
+    if (filters?.status) params.append('status', filters.status);
+    if (filters?.severityLevel) params.append('severityLevel', filters.severityLevel);
+    if (filters?.search) params.append('search', filters.search);
 
-    const url = `${API_ENDPOINTS.REPORTS}${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
-    const response = await fetch(url);
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch reports');
-    }
-    return response.json();
+    const response = await axiosInstance.get<Report[]>(
+      `${API_ENDPOINTS.REPORTS}?${params.toString()}`
+    );
+    return response.data;
   },
 
-  async getReportById(id: number): Promise<Report> {
-    const response = await fetch(API_ENDPOINTS.REPORT_BY_ID(id.toString()));
-    if (!response.ok) {
-      throw new Error('Failed to fetch report');
-    }
-    return response.json();
+  getReportById: async (id: number): Promise<Report> => {
+    const response = await axiosInstance.get<Report>(
+      API_ENDPOINTS.REPORT_BY_ID(id.toString())
+    );
+    return response.data;
   },
 
-  async createReport(data: CreateReportDto): Promise<Report> {
-    const response = await fetch(API_ENDPOINTS.REPORTS, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Failed to create report');
-    }
-    return response.json();
+  createReport: async (data: CreateReportDto): Promise<Report> => {
+    const response = await axiosInstance.post<Report>(
+      API_ENDPOINTS.REPORTS,
+      data
+    );
+    return response.data;
   },
 
-  async updateReport(id: number, data: Partial<Report>): Promise<Report> {
-    const response = await fetch(API_ENDPOINTS.REPORT_BY_ID(id.toString()), {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) {
-      throw new Error('Failed to update report');
-    }
-    return response.json();
+  updateReport: async (id: number, data: UpdateReportDto): Promise<Report> => {
+    const response = await axiosInstance.put<Report>(
+      API_ENDPOINTS.REPORT_BY_ID(id.toString()),
+      data
+    );
+    return response.data;
   },
 
-  async deleteReport(id: number): Promise<void> {
-    const response = await fetch(API_ENDPOINTS.REPORT_BY_ID(id.toString()), {
-      method: 'DELETE',
-    });
-    if (!response.ok) {
-      throw new Error('Failed to delete report');
-    }
+  deleteReport: async (id: number): Promise<void> => {
+    await axiosInstance.delete(API_ENDPOINTS.REPORT_BY_ID(id.toString()));
   },
 };

@@ -95,12 +95,6 @@ CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
 CREATE TRIGGER update_reports_updated_at BEFORE UPDATE ON reports
 	FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- Triggers to auto-update updated_at
-CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_reports_updated_at BEFORE UPDATE ON reports
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
 -- Hardcode users (1 admin 1 regular)
 -- 'pass123' is the password for both
 -- below is one hash for this password
