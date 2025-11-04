@@ -3,7 +3,7 @@ const SEVERITIES = ["LOW", "MEDIUM", "HIGH", "CRITICAL"];
 const STATUSES = ["PENDING", "WORKING", "PLANNING", "DONE"];
 
 class Report {
-    constructor(name, location, category, severityLevel, address, images, description) {
+    constructor(name, location, category, severityLevel, address, images, description, createdBy) {
         this.name = name;
         this.location = location;
         this.category = category;
@@ -11,6 +11,7 @@ class Report {
         this.address = address;
         this.images = images || [];
         this.description = description || "";
+        this.createdBy = createdBy;
 
         this.id = null;
         this.date = null;

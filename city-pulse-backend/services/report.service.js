@@ -42,7 +42,7 @@ const updateReport = async (id, dataToUpdate) => {
     return updatedReport;
 };
 
-const addNewReport = async (reportData) => {
+const addNewReport = async (reportData, userId) => {
     console.log('Service: Adding and verifying new report');
     const { name, location, category, severityLevel, address, images, description } = reportData;
     
@@ -65,7 +65,7 @@ const addNewReport = async (reportData) => {
         throw new Error('Images variable should be an array!');
     }
     
-    const reportModel = new Report(name, location, category, severityLevel, address, images, description);
+    const reportModel = new Report(name, location, category, severityLevel, address, images, description, userId);
 
     return await reportRepository.create(reportModel);
 };

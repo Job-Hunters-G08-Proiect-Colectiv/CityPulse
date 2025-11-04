@@ -165,9 +165,9 @@ const create = async (reportModel) => {
     const insertReportQuery = `
       INSERT INTO reports (
         name, location_lat, location_lng, address,
-        category, severity_level, status, description, upvotes
+        category, severity_level, status, description, upvotes, created_by
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
       RETURNING *
     `;
      
@@ -180,7 +180,8 @@ const create = async (reportModel) => {
       reportModel.severityLevel,
       reportModel.status,
       reportModel.description || null,
-      reportModel.upvotes
+      reportModel.upvotes,
+      reportModel.createdBy
     ]);
 
     const newReport = reportResult.rows[0];
@@ -200,22 +201,8 @@ const create = async (reportModel) => {
     await client.query('COMMIT');
 
     // Return formatted report
-    return {
-      id: newReport.id,
-      name: newReport.name,
-      date: newReport.date,
-      location: {
-        lat: newReport.location_lat,
-        lng: newReport.location_lng
-      },
-      address: newReport.address,
-      category: newReport.category,
-      severityLevel: newReport.severity_level,
-      status: newReport.status,
-      upvotes: newReport.upvotes,
-      description: newReport.description,
-      images: reportModel.images || []
-    };
+    const finalReport = await findById(newReport.id);
+    return finalReport;
   } catch (error) {
     await client.query('ROLLBACK');
     console.error('Database error in create:', error);

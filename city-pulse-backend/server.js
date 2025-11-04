@@ -5,6 +5,7 @@ const cors = require('cors');
 const path = require('path');
 const reportRoutes = require('./routes/report.routes');
 const uploadRoutes = require('./routes/upload.routes');
+const authRoutes = require('./routes/auth.routes');
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.get('/health', (req, res) => {
 });
 
 app.use('/api/reports', reportRoutes);
+app.use('/api/auth', authRoutes);
 
 module.exports = app;
 

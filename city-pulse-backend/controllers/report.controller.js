@@ -54,7 +54,8 @@ const httpAddNewReport = async (req, res) => {
     console.log('Controller: POST /api/reports');
 
     try {
-        const newReport = await reportService.addNewReport(req.body);
+        const userId = req.user.id;
+        const newReport = await reportService.addNewReport(req.body, userId);
         res.status(201).json(newReport);
     } catch (error) {
         if (error.message.includes('required') || error.message.includes('Invalid')) {

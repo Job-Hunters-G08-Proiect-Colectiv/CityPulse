@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { authenticateToken, isAdmin } = require('../middleware/auth.middleware');
 
 const {
     httpGetAllReports,
@@ -9,10 +10,14 @@ const {
     httpGetReportById
 } = require('../controllers/report.controller.js');
 
+// public routes
 router.get('/', httpGetAllReports);
-router.post('/', httpAddNewReport);
-router.delete('/:id', httpDeleteReport);
 router.get('/:id', httpGetReportById);
-router.put('/:id', httpUpdateReport);
+
+router.post('/', authenticateToken, httpAddNewReport);
+
+// admin routes
+router.put('/:id', authenticateToken, isAdmin, httpUpdateReport);
+router.delete('/:id', authenticateToken, isAdmin, httpDeleteReport);
 
 module.exports = router;
