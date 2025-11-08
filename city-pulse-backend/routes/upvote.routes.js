@@ -4,7 +4,7 @@ const {
     httpToggleUpvote,
     httpCheckUpvoteStatus,
 } = require('../controllers/upvote.controller');
-const { authenticateToken } = require('../middleware/auth.middleware');
+const { authenticateToken } = require('../middlewares/auth.middleware');
 
 // All upvote routes require authentication
 router.post('reports/:reportId/upvote', authenticateToken, httpToggleUpvote);

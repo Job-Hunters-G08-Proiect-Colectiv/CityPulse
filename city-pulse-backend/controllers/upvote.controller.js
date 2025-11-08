@@ -1,4 +1,3 @@
-const { L } = require('vitest/dist/chunks/reporters.nr4dxCkA.js');
 const upvoteService = require('../services/upvote.service');
 
 // Toggle upvote for a report

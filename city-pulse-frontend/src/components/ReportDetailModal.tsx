@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Calendar, MapPin, AlertCircle, ChevronLeft, ChevronRight, ThumbsUp } from 'lucide-react';
 import type { Report } from '../types/report';
 import { getImageUrl } from '../utils/imageUtils';
+import { upvoteService } from '../services/upvoteService.ts';
 import './ReportDetailModal.css';
 
 interface ReportDetailModalProps {
@@ -13,6 +14,63 @@ interface ReportDetailModalProps {
 
 const ReportDetailModal = ({ report, isOpen, onClose, onUpvote }: ReportDetailModalProps) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [hasUpvoted, setHasUpvoted] = useState(false);
+  const [upvoteCount, setUpvoteCount] = useState(0);
+  const [isUpvoting, setIsUpvoting] = useState(false);
+
+  useEffect(() => {
+    if (report && isOpen) {
+      setUpvoteCount(report.upvotes);
+      checkUpvoteStatus();
+    }
+  }, [report, isOpen]);
+
+  const checkUpvoteStatus = async () => {
+    if (!report) return;
+
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      setHasUpvoted(false);
+      return;
+    }
+
+    try {
+      const result = await upvoteService.checkUpvoteStatus(report.id, token);
+      setHasUpvoted(result.hasUpvoted);
+    } catch (error) {
+      console.error('Error checking upvote status:', error);
+    }
+  };
+
+  const handleUpvote = async () => {
+    if (!report) return;
+
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      alert('Please login to upvote.');
+      return;
+    }
+
+    setIsUpvoting(true);
+
+    try {
+      const result = await upvoteService.toggleUpvote(report.id, token);
+
+      // Update local state
+      setHasUpvoted(result.hasUpvoted);
+      setUpvoteCount(prev => result.upvoted ? prev + 1 : prev - 1);
+
+      // Call parent's onUpvote handler if provided (to refresh report list)
+      if (onUpvote) {
+        onUpvote(report.id);
+      }
+    } catch (error: any) {
+      console.error('Error toggling upvote:', error);
+      alert(error.message || 'Failed to toggle upvote.');
+    } finally {
+      setIsUpvoting(false);
+    }
+  };
 
   if (!isOpen || !report) return null;
 
@@ -56,12 +114,6 @@ const ReportDetailModal = ({ report, isOpen, onClose, onUpvote }: ReportDetailMo
   const prevImage = () => {
     if (report.images.length > 0) {
       setCurrentImageIndex((prev) => (prev - 1 + report.images.length) % report.images.length);
-    }
-  };
-
-  const handleUpvote = () => {
-    if (onUpvote) {
-      onUpvote(report.id);
     }
   };
 
@@ -169,9 +221,13 @@ const ReportDetailModal = ({ report, isOpen, onClose, onUpvote }: ReportDetailMo
           )}
 
           <div className="detail-actions">
-            <button className="upvote-button" onClick={handleUpvote}>
-              <ThumbsUp size={18} />
-              <span>Upvote ({report.upvotes})</span>
+            <button 
+              className={`upvote-button ${hasUpvoted ? 'upvoted' : ''}`}
+              onClick={handleUpvote}
+              disabled={isUpvoting}
+            >
+              <ThumbsUp size={18} fill={hasUpvoted ? 'currentColor' : 'none'} />
+              <span>{hasUpvoted ? 'Upvoted' : 'Upvote'} ({upvoteCount})</span>
             </button>
           </div>
         </div>
