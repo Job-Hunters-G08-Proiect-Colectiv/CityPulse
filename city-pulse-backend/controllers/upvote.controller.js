@@ -39,21 +39,7 @@ const httpCheckUpvoteStatus = async (req, res) => {
         res.status(500).json({ error: 'Failed to check upvote status' });
     }
 };
-
-// Get all reports user has upvoted
-const httpGetUserUpvotedReports = async (req, res) => {
-    try {
-        const userId = req.user.id;
-        const reportIds = await upvoteService.getUserUpvotedReports(userId);
-        res.status(200).json({ upvotedReports: reportIds });
-    } catch (error) {
-        console.error('Error getting user upvoted reports:', error);
-        res.status(500).json({ error: 'Failed to get upvoted reports' });
-    }
-};
-
 module.exports = {
     httpToggleUpvote,
     httpCheckUpvoteStatus,
-    httpGetUserUpvotedReports
 };

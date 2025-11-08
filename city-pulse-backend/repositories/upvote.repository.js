@@ -59,16 +59,8 @@ const removeUpvote = async (userId, reportId) => {
     }
 };
 
-// Get all reports upvoted by a user
-const getUserUpvotedReports = async (userId) => {
-    const query = `SELECT report_id FROM report_upvotes WHERE user_id = $1`;
-    const result = await pool.query(query, [userId]);
-    return result.rows.map(row => row.report_id);
-};
-
 module.exports = {
     hasUserUpvoted,
     addUpvote,
     removeUpvote,
-    getUserUpvotedReports
 };

@@ -28,13 +28,7 @@ const checkUpvoteStatus = async (userId, reportId) => {
     return await upvoteRepository.hasUserUpvoted(userId, reportId);
 };
 
-// Get all reports a user has upvoted
-const getUserUpvotedReports = async (userId) => {
-    return await upvoteRepository.getUpvotedReportsByUser(userId);
-}
-
 module.exports = {
     toggleUpvote,
     checkUpvoteStatus,
-    getUserUpvotedReports
 };
