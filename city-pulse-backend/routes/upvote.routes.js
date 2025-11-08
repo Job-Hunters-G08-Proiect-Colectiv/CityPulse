@@ -7,7 +7,7 @@ const {
 const { authenticateToken } = require('../middlewares/auth.middleware');
 
 // All upvote routes require authentication
-router.post('reports/:reportId/upvote', authenticateToken, httpToggleUpvote);
-router.get('reports/:reportId/upvote-status', authenticateToken, httpCheckUpvoteStatus);
+router.post('/reports/:reportId/upvote', authenticateToken, httpToggleUpvote);
+router.get('/reports/:reportId/upvote-status', authenticateToken, httpCheckUpvoteStatus);
 
 module.exports = router;

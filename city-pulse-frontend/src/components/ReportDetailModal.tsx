@@ -36,7 +36,7 @@ const ReportDetailModal = ({ report, isOpen, onClose, onUpvote }: ReportDetailMo
 
     try {
       const result = await upvoteService.checkUpvoteStatus(report.id, token);
-      setHasUpvoted(result.hasUpvoted);
+      setHasUpvoted(Boolean(result.upvoted));
     } catch (error) {
       console.error('Error checking upvote status:', error);
     }
@@ -57,13 +57,11 @@ const ReportDetailModal = ({ report, isOpen, onClose, onUpvote }: ReportDetailMo
       const result = await upvoteService.toggleUpvote(report.id, token);
 
       // Update local state
-      setHasUpvoted(result.hasUpvoted);
-      setUpvoteCount(prev => result.upvoted ? prev + 1 : prev - 1);
+      const newUpvoted = Boolean(result.upvoted);
+      setHasUpvoted(newUpvoted);
 
-      // Call parent's onUpvote handler if provided (to refresh report list)
-      if (onUpvote) {
-        onUpvote(report.id);
-      }
+      setUpvoteCount(result.upvoteCount);
+      
     } catch (error: any) {
       console.error('Error toggling upvote:', error);
       alert(error.message || 'Failed to toggle upvote.');

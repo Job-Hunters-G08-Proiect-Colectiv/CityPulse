@@ -15,17 +15,30 @@ const toggleUpvote = async (userId, reportId) => {
     if (hasUpvoted) {
         // Remove upvote
         await upvoteRepository.removeUpvote(userId, reportId);
-        return { upvoted: false};
     } else {
         // Add upvote
         await upvoteRepository.addUpvote(userId, reportId);
-        return { upvoted: true };
     }
+
+    // Fetch update upvote count
+    const updatedReport = await reportRepository.findById(reportId);
+    const upvoteCount = updatedReport.upvotes || 0;
+
+    return {
+        upvoted: !hasUpvoted,
+        upvoteCount
+    };
 };
 
 // Check if user has upvoted a report
 const checkUpvoteStatus = async (userId, reportId) => {
-    return await upvoteRepository.hasUserUpvoted(userId, reportId);
+    const upvoted =  await upvoteRepository.hasUserUpvoted(userId, reportId);
+
+    // Fetch current upvote count for UI consistency
+    const report = await reportRepository.findById(reportId);
+    const upvoteCount = report ? report.upvotes || 0 : 0;
+
+    return { upvoted, upvoteCount }
 };
 
 module.exports = {

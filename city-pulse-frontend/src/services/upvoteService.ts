@@ -22,6 +22,7 @@ export const upvoteService = {
 
     async checkUpvoteStatus(reportId: number, token: string) {
         const response = await fetch(`${API_BASE_URL}/api/reports/${reportId}/upvote-status`, {
+            method: 'GET',
             headers: {
                 'Authorization': `Bearer ${token}`,
             },
