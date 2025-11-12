@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
-import { X, Calendar, MapPin, AlertCircle, ChevronLeft, ChevronRight, ThumbsUp, MessageSquare, Send, Trash2 } from 'lucide-react';
-import type { Report, Comment } from '../types/report';
+import { X, Calendar, MapPin, AlertCircle, ChevronLeft, ChevronRight, ThumbsUp } from 'lucide-react';
+import type { Report } from '../types/report';
 import { getImageUrl } from '../utils/imageUtils';
-import { commentService } from '../services/commentService';
-import { isAuthenticated, getCurrentUser } from '../utils/authUtils';
+import { upvoteService } from '../services/upvoteService.ts';
 import './ReportDetailModal.css';
 
 interface ReportDetailModalProps {
@@ -15,41 +14,69 @@ interface ReportDetailModalProps {
 
 const ReportDetailModal = ({ report, isOpen, onClose, onUpvote }: ReportDetailModalProps) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [comments, setComments] = useState<Comment[]>([]);
-  const [loadingComments, setLoadingComments] = useState(false);
-  const [newComment, setNewComment] = useState('');
-  const [submittingComment, setSubmittingComment] = useState(false);
+  const [hasUpvoted, setHasUpvoted] = useState(false);
+  const [upvoteCount, setUpvoteCount] = useState(0);
+  const [isUpvoting, setIsUpvoting] = useState(false);
 
   useEffect(() => {
-    if (isOpen && report) {
-      loadComments();
-    } else {
-      setComments([]);
-      setNewComment('');
+    if (report && isOpen) {
+      setUpvoteCount(report.upvotes);
+      checkUpvoteStatus();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, report?.id]);
+  }, [report, isOpen]);
 
-  const loadComments = async () => {
+  const checkUpvoteStatus = async () => {
     if (!report) return;
-    setLoadingComments(true);
+
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      setHasUpvoted(false);
+      return;
+    }
+
     try {
-      const fetchedComments = await commentService.getCommentsByReportId(report.id);
-      setComments(fetchedComments);
+      const result = await upvoteService.checkUpvoteStatus(report.id, token);
+      setHasUpvoted(Boolean(result.upvoted));
     } catch (error) {
-      console.error('Error loading comments:', error);
+      console.error('Error checking upvote status:', error);
+    }
+  };
+
+  const handleUpvote = async () => {
+    if (!report) return;
+
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      alert('Please login to upvote.');
+      return;
+    }
+
+    setIsUpvoting(true);
+
+    try {
+      const result = await upvoteService.toggleUpvote(report.id, token);
+
+      // Update local state
+      const newUpvoted = Boolean(result.upvoted);
+      setHasUpvoted(newUpvoted);
+
+      setUpvoteCount(result.upvoteCount);
+
+    } catch (error: any) {
+      console.error('Error toggling upvote:', error);
+      alert(error.message || 'Failed to toggle upvote.');
     } finally {
-      setLoadingComments(false);
+      setIsUpvoting(false);
     }
   };
 
   if (!isOpen || !report) return null;
 
   const formatDate = (date: string) => {
-    return new Intl.DateTimeFormat('en-US', { 
+    return new Intl.DateTimeFormat('en-US', {
       weekday: 'long',
       year: 'numeric',
-      month: 'long', 
+      month: 'long',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
@@ -88,244 +115,122 @@ const ReportDetailModal = ({ report, isOpen, onClose, onUpvote }: ReportDetailMo
     }
   };
 
-  const handleUpvote = () => {
-    if (onUpvote) {
-      onUpvote(report.id);
-    }
-  };
-
-  const handleSubmitComment = async () => {
-    if (!report || !newComment.trim() || submittingComment) return;
-    
-    setSubmittingComment(true);
-    try {
-      const createdComment = await commentService.createComment(report.id, {
-        commentText: newComment.trim()
-      });
-      setComments([...comments, createdComment]);
-      setNewComment('');
-    } catch (error: any) {
-      console.error('Error creating comment:', error);
-      const errorMessage = error?.response?.data?.error || error?.message || 'Failed to add comment. Please try again.';
-      alert(errorMessage);
-    } finally {
-      setSubmittingComment(false);
-    }
-  };
-
-  const handleDeleteComment = async (commentId: number) => {
-    if (!confirm('Are you sure you want to delete this comment?')) return;
-    
-    try {
-      await commentService.deleteComment(commentId);
-      setComments(comments.filter(c => c.id !== commentId));
-    } catch (error) {
-      console.error('Error deleting comment:', error);
-      alert('Failed to delete comment. Please try again.');
-    }
-  };
-
-  const currentUser = getCurrentUser();
-  const canDeleteComment = (comment: Comment) => {
-    return currentUser && (currentUser.id === comment.userId || currentUser.userType === 'ADMIN');
-  };
-
   return (
-    <div className="detail-modal-overlay" onClick={onClose}>
-      <div className="detail-modal-content" onClick={(e) => e.stopPropagation()}>
-        <div className="detail-modal-header">
-          <div className="header-badges">
-            <span 
-              className="severity-badge" 
-              style={{ backgroundColor: getSeverityColor(report.severityLevel) }}
+      <div className="detail-modal-overlay" onClick={onClose}>
+        <div className="detail-modal-content" onClick={(e) => e.stopPropagation()}>
+          <div className="detail-modal-header">
+            <div className="header-badges">
+            <span
+                className="severity-badge"
+                style={{ backgroundColor: getSeverityColor(report.severityLevel) }}
             >
               {report.severityLevel}
             </span>
-            <span 
-              className="status-badge"
-              style={{ 
-                backgroundColor: getStatusColor(report.status),
-                color: 'white'
-              }}
-            >
+              <span
+                  className="status-badge"
+                  style={{
+                    backgroundColor: getStatusColor(report.status),
+                    color: 'white'
+                  }}
+              >
               {report.status}
             </span>
-          </div>
-          <button 
-            type="button"
-            className="detail-close-button" 
-            onClick={onClose}
-            aria-label="Close modal"
-          >
-            <X size={24} />
-          </button>
-        </div>
-
-        <div className="detail-modal-body">
-          <h2 className="detail-title">{report.name}</h2>
-
-          <div className="detail-meta">
-            <div className="meta-item">
-              <AlertCircle size={18} />
-              <span>{report.category.replace('_', ' ')}</span>
             </div>
-            <div className="meta-item">
-              <Calendar size={18} />
-              <span>{formatDate(report.date)}</span>
-            </div>
-            <div className="meta-item">
-              <MapPin size={18} />
-              <span>{report.address}</span>
-            </div>
-          </div>
-
-          {report.images.length > 0 && (
-            <div className="image-gallery">
-              <div className="main-image-container">
-                <img 
-                  src={getImageUrl(report.images[currentImageIndex])} 
-                  alt={`Report image ${currentImageIndex + 1}`}
-                  className="main-image"
-                />
-                {report.images.length > 1 && (
-                  <>
-                    <button 
-                      className="image-nav-button prev" 
-                      onClick={prevImage}
-                      aria-label="Previous image"
-                    >
-                      <ChevronLeft size={24} />
-                    </button>
-                    <button 
-                      className="image-nav-button next" 
-                      onClick={nextImage}
-                      aria-label="Next image"
-                    >
-                      <ChevronRight size={24} />
-                    </button>
-                    <div className="image-counter">
-                      {currentImageIndex + 1} / {report.images.length}
-                    </div>
-                  </>
-                )}
-              </div>
-
-              {report.images.length > 1 && (
-                <div className="thumbnail-container">
-                  {report.images.map((image, index) => (
-                    <button
-                      key={index}
-                      className={`thumbnail ${index === currentImageIndex ? 'active' : ''}`}
-                      onClick={() => setCurrentImageIndex(index)}
-                    >
-                      <img src={getImageUrl(image)} alt={`Thumbnail ${index + 1}`} />
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {report.description && (
-            <div className="detail-description">
-              <h3>Description</h3>
-              <p>{report.description}</p>
-            </div>
-          )}
-
-          <div className="detail-actions">
-            <button 
-              className={`upvote-button ${hasUpvoted ? 'upvoted' : ''}`}
-              onClick={handleUpvote}
-              disabled={isUpvoting}
+            <button
+                type="button"
+                className="detail-close-button"
+                onClick={onClose}
+                aria-label="Close modal"
             >
-              <ThumbsUp size={18} fill={hasUpvoted ? 'currentColor' : 'none'} />
-              <span>{hasUpvoted ? 'Upvoted' : 'Upvote'} ({upvoteCount})</span>
+              <X size={24} />
             </button>
           </div>
 
-          {/* Comments Section */}
-          <div className="comments-section">
-            <div className="comments-header">
-              <MessageSquare size={20} />
-              <h3>Comments ({comments.length})</h3>
+          <div className="detail-modal-body">
+            <h2 className="detail-title">{report.name}</h2>
+
+            <div className="detail-meta">
+              <div className="meta-item">
+                <AlertCircle size={18} />
+                <span>{report.category.replace('_', ' ')}</span>
+              </div>
+              <div className="meta-item">
+                <Calendar size={18} />
+                <span>{formatDate(report.date)}</span>
+              </div>
+              <div className="meta-item">
+                <MapPin size={18} />
+                <span>{report.address}</span>
+              </div>
             </div>
 
-            {loadingComments ? (
-              <div className="comments-loading">Loading comments...</div>
-            ) : (
-              <>
-                <div className="comments-list">
-                  {comments.length === 0 ? (
-                    <div className="no-comments">No comments yet. Be the first to comment!</div>
-                  ) : (
-                    comments.map((comment) => (
-                      <div key={comment.id} className="comment-item">
-                        <div className="comment-header">
-                          <div className="comment-author">
-                            <span className="comment-username">{comment.username}</span>
-                            {comment.userType === 'ADMIN' && (
-                              <span className="comment-admin-badge">Admin</span>
-                            )}
-                            <span className="comment-date">
-                              {new Date(comment.createdAt).toLocaleDateString('en-US', {
-                                month: 'short',
-                                day: 'numeric',
-                                year: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })}
-                            </span>
+            {report.images.length > 0 && (
+                <div className="image-gallery">
+                  <div className="main-image-container">
+                    <img
+                        src={getImageUrl(report.images[currentImageIndex])}
+                        alt={`Report image ${currentImageIndex + 1}`}
+                        className="main-image"
+                    />
+                    {report.images.length > 1 && (
+                        <>
+                          <button
+                              className="image-nav-button prev"
+                              onClick={prevImage}
+                              aria-label="Previous image"
+                          >
+                            <ChevronLeft size={24} />
+                          </button>
+                          <button
+                              className="image-nav-button next"
+                              onClick={nextImage}
+                              aria-label="Next image"
+                          >
+                            <ChevronRight size={24} />
+                          </button>
+                          <div className="image-counter">
+                            {currentImageIndex + 1} / {report.images.length}
                           </div>
-                          {canDeleteComment(comment) && (
-                            <div className="comment-actions">
-                              <button
-                                className="comment-action-btn delete"
-                                onClick={() => handleDeleteComment(comment.id)}
-                                aria-label="Delete comment"
-                              >
-                                <Trash2 size={14} />
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                        <div className="comment-text">{comment.commentText}</div>
+                        </>
+                    )}
+                  </div>
+
+                  {report.images.length > 1 && (
+                      <div className="thumbnail-container">
+                        {report.images.map((image, index) => (
+                            <button
+                                key={index}
+                                className={`thumbnail ${index === currentImageIndex ? 'active' : ''}`}
+                                onClick={() => setCurrentImageIndex(index)}
+                            >
+                              <img src={getImageUrl(image)} alt={`Thumbnail ${index + 1}`} />
+                            </button>
+                        ))}
                       </div>
-                    ))
                   )}
                 </div>
-
-                {isAuthenticated() && (
-                  <div className="comment-form">
-                    <textarea
-                      value={newComment}
-                      onChange={(e) => setNewComment(e.target.value)}
-                      placeholder="Add a comment..."
-                      className="comment-input"
-                      rows={3}
-                    />
-                    <button
-                      className="comment-submit-btn"
-                      onClick={handleSubmitComment}
-                      disabled={!newComment.trim() || submittingComment}
-                    >
-                      <Send size={16} />
-                      <span>{submittingComment ? 'Posting...' : 'Post Comment'}</span>
-                    </button>
-                  </div>
-                )}
-
-                {!isAuthenticated() && (
-                  <div className="comment-login-prompt">
-                    Please log in to add comments.
-                  </div>
-                )}
-              </>
             )}
+
+            {report.description && (
+                <div className="detail-description">
+                  <h3>Description</h3>
+                  <p>{report.description}</p>
+                </div>
+            )}
+
+            <div className="detail-actions">
+              <button
+                  className={`upvote-button ${hasUpvoted ? 'upvoted' : ''}`}
+                  onClick={handleUpvote}
+                  disabled={isUpvoting}
+              >
+                <ThumbsUp size={18} fill={hasUpvoted ? 'currentColor' : 'none'} />
+                <span>{hasUpvoted ? 'Upvoted' : 'Upvote'} ({upvoteCount})</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
   );
 };
 
