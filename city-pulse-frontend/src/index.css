@@ -61,3 +61,36 @@ input::placeholder {
   color: #999 !important;
   opacity: 1 !important;
 }
+
+/* The grey background overlay */
+.stats-popup-overlay {
+  position: fixed; /* Cover the whole screen */
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.75); /* Grey-out effect */
+  z-index: 3000; /* On top of the map (which is ~1000) */
+  cursor: pointer; /* So it feels clickable to close */
+}
+
+/* The popup window itself */
+.stats-popup-window {
+  position: fixed; /* Float on top */
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%); /* Center it perfectly */
+
+  width: 90vw; /* 90% of the screen width */
+  max-width: 1200px; /* But not ridiculously wide */
+  height: 90vh; /* 90% of the screen height */
+
+  background: #f4f7fa;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  z-index: 3001; /* On top of the grey overlay */
+
+  /* This is key for the scrolling */
+  display: flex;
+  flex-direction: column;
+}

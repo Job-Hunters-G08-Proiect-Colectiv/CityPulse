@@ -234,9 +234,13 @@ const ReportDetailModal = ({ report, isOpen, onClose, onUpvote }: ReportDetailMo
           )}
 
           <div className="detail-actions">
-            <button className="upvote-button" onClick={handleUpvote}>
-              <ThumbsUp size={18} />
-              <span>Upvote ({report.upvotes})</span>
+            <button 
+              className={`upvote-button ${hasUpvoted ? 'upvoted' : ''}`}
+              onClick={handleUpvote}
+              disabled={isUpvoting}
+            >
+              <ThumbsUp size={18} fill={hasUpvoted ? 'currentColor' : 'none'} />
+              <span>{hasUpvoted ? 'Upvoted' : 'Upvote'} ({upvoteCount})</span>
             </button>
           </div>
 

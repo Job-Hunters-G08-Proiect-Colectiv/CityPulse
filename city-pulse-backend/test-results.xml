@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="2" failures="0" errors="0" time="0.804">
+    <testsuite name="test/app.test.js" timestamp="2025-10-30T15:17:02.396Z" hostname="Codrut" tests="2" failures="0" errors="0" skipped="0" time="0.0388884">
+        <testcase classname="test/app.test.js" name="Health endpoint &gt; GET /health returns 200 ok" time="0.027932">
+        </testcase>
+        <testcase classname="test/app.test.js" name="Reports endpoints &gt; GET /api/reports returns JSON array" time="0.0089742">
+            <system-out>
+Controller: GET /api/reports with filters: [Object: null prototype] {}
+
+            </system-out>
+        </testcase>
+    </testsuite>
+</testsuites>

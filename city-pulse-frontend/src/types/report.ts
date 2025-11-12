@@ -39,4 +39,5 @@ export interface Report {
   severityLevel: SeverityLevel;
   upvotes: number;
   description?: string;
+  createdBy?: number;
 }

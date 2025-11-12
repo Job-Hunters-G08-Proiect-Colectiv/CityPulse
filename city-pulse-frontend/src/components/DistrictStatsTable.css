@@ -1,0 +1,28 @@
+.stats-table-container {
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  overflow-x: auto;
+}
+.stats-table-container h3 {
+  margin-top: 0;
+  text-align: center;
+}
+.stats-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.stats-table th,
+.stats-table td {
+  padding: 12px 15px;
+  border-bottom: 1px solid #f0f0f0;
+  text-align: left;
+}
+.stats-table th {
+  background-color: #f9f9f9;
+  font-weight: 600;
+}
+.stats-table tbody tr:last-child td {
+  border-bottom: none;
+}

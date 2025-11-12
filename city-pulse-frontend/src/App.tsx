@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import ReportList from './components/ReportList';
 import CreateReportModal from './components/CreateReportModal';
 import ReportDetailModal from './components/ReportDetailModal';
@@ -10,6 +10,8 @@ import { reportService, type CreateReportDto } from './services/reportService';
 import { API_ENDPOINTS } from './config/api';
 import type { Report, ReportCategory, ReportStatus, SeverityLevel } from './types/report';
 import './App.css';
+import NotificationCenter, { type UINotification } from './components/NotificationCenter';
+import { getCurrentUser } from './utils/authUtils';
 
 function App() {
   const [reports, setReports] = useState<Report[]>([]);
@@ -24,6 +26,8 @@ function App() {
   const [filterStatus, setFilterStatus] = useState<ReportStatus | 'ALL'>('ALL');
   const [filterSeverity, setFilterSeverity] = useState<SeverityLevel | 'ALL'>('ALL');
   const [networkError, setNetworkError] = useState(false);
+  const prevStatusRef = useRef<Map<number, ReportStatus>>(new Map());
+  const [notifications, setNotifications] = useState<UINotification[]>([]);
 
   // Debounced search effect
   useEffect(() => {
@@ -86,6 +90,12 @@ function App() {
 
       const data = await reportService.getAllReports(filters);
       setReports(data);
+      // initialize previous statuses map on active dataset to avoid initial-change noise
+      const map = new Map<number, ReportStatus>();
+      for (const r of data) {
+        map.set(r.id, r.status);
+      }
+      prevStatusRef.current = map;
     } catch (err: any) {
       const message = (err?.message || '').toLowerCase();
       if (!navigator.onLine || message.includes('failed to fetch') || message.includes('network')) {
@@ -97,6 +107,67 @@ function App() {
       setIsRefreshing(false);
     }
   };
+
+  // silent background polling every 3s; show notifications if data changed
+  useEffect(() => {
+    let isCancelled = false;
+
+    const checkForUpdates = async () => {
+      try {
+        if (document.hidden) return; // skip when tab not visible
+
+        const latest = await reportService.getAllReports({});
+        if (!isCancelled) {
+          // detect status changes for current user's reports
+          try {
+            const user = getCurrentUser();
+            const prev = prevStatusRef.current;
+            if (user?.id) {
+              const changedMine: { id: number; name: string; from: ReportStatus; to: ReportStatus }[] = [];
+              for (const r of latest) {
+                const before = prev.get(r.id);
+                if (before && before !== r.status && r.createdBy === user.id) {
+                  changedMine.push({ id: r.id, name: r.name, from: before, to: r.status });
+                }
+              }
+              if (changedMine.length) {
+                const newNotes = changedMine.map<UINotification>((c) => ({
+                  id: `${c.id}-${Date.now()}`,
+                  type: 'success',
+                  message: `Your report \"${c.name}\" status changed: ${c.from} → ${c.to}`,
+                }));
+                const ids = newNotes.map(n => n.id);
+                setNotifications((prevNotes) => ([...prevNotes, ...newNotes]));
+                // auto-dismiss these specific notifications after 6s
+                setTimeout(() => {
+                  setNotifications((prevNotes) => prevNotes.filter(n => !ids.includes(n.id)));
+                }, 6000);
+              }
+            }
+          } catch (_) {
+            // ignore notification errors
+          }
+
+          // update prev status map for next diff
+          const map = new Map<number, ReportStatus>();
+          for (const r of latest) map.set(r.id, r.status);
+          prevStatusRef.current = map;
+        }
+      } catch (_) {
+        // ignore background errors; connectivity is handled by the health ping
+      }
+    };
+
+    const id = setInterval(checkForUpdates, 3000);
+    // fire one immediate background check after initial load finishes
+    if (!loading) {
+      checkForUpdates();
+    }
+    return () => {
+      isCancelled = true;
+      clearInterval(id);
+    };
+  }, [loading]);
 
   const handleCreateReport = async (reportData: Omit<Report, 'id' | 'date' | 'status' | 'upvotes'>) => {
     try {
@@ -227,6 +298,10 @@ function App() {
         isOpen={selectedReport !== null}
         onClose={() => setSelectedReport(null)}
         onUpvote={handleUpvote}
+      />
+      <NotificationCenter
+        notifications={notifications}
+        onDismiss={(id) => setNotifications((ns) => ns.filter((n) => n.id !== id))}
       />
       <NetworkErrorModal open={networkError} onRetry={() => {
   setNetworkError(false);

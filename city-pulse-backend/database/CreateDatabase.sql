@@ -1,5 +1,6 @@
 -- UUID extension for generating unique IDs
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "postgis";
 
 -- !! CLEANUP SCRIPT - Only run if you intend on resetting the database !!
 DROP TRIGGER IF EXISTS update_users_updated_at ON users;
