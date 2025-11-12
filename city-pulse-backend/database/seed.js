@@ -18,30 +18,36 @@ const cities = [
 // Sample reports
 // -----------------------------
 const sampleReports = [
-  {
-    name: "Pothole",
-    location_lat: 46.7773787,
-    location_lng: 23.6066821,
-    address: "Strada Buftea, Mărăști, Cluj-Napoca",
-    category: "POTHOLE",
-    severity_level: "HIGH",
-    status: "PENDING",
-    description: "Large pothole in the middle of the road!",
-    upvotes: 23,
-    images: ["/uploads/report-1.gif", "/uploads/report-2.jpeg"],
-  },
-  {
-    name: "Graffiti",
-    location_lat: 46.756932,
-    location_lng: 23.5621118,
-    address: "Strada Ion Meșter, Mănăștur, Cluj-Napoca",
-    category: "VANDALISM",
-    severity_level: "LOW",
-    status: "PENDING",
-    description: "Someone graffitied the wall of my apartment building.",
-    upvotes: 4,
-    images: ["/uploads/report-3.jpg"],
-  },
+    {
+        name: "Pothole",
+        location_lat: 46.7773787,
+        location_lng: 23.6066821,
+        address: "Strada Buftea, Mărăști, Cluj-Napoca, Cluj Metropolitan Area, Cluj, 400186, Romania",
+        category: "POTHOLE",
+        severity_level: "HIGH",
+        status: "PENDING",
+        description: "Large pothole in the middle of the road!",
+        upvotes: 23,
+        images: [
+            "/uploads/report-1762195908064-631463351.gif",
+            "/uploads/report-1762195908089-406505933.jpeg",
+            "/uploads/report-1762195908090-676430511.png"
+        ]
+    },
+    {
+        name: "Graffiti",
+        location_lat: 46.756932,
+        location_lng: 23.5621118,
+        address: "Strada Ion Meșter, Mănăștur, Cluj-Napoca, Cluj Metropolitan Area, Cluj, 400651, Romania",
+        category: "VANDALISM",
+        severity_level: "LOW",
+        status: "PENDING",
+        description: "Someone graffitied the wall of my apartment building. I want it cleaned up.",
+        upvotes: 4,
+        images: [
+            "/uploads/report-1762197443385-520854171.jpg"
+        ]
+    }
 ];
 
 // -----------------------------
