@@ -16,6 +16,17 @@ export interface Location {
   lng: number;
 }
 
+export interface Comment {
+  id: number;
+  reportId: number;
+  userId: number;
+  commentText: string;
+  createdAt: string;
+  updatedAt: string;
+  username: string;
+  userType: 'REGULAR' | 'ADMIN';
+}
+
 export interface Report {
   id: number;
   name: string;
