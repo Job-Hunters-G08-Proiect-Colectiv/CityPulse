@@ -6,7 +6,12 @@ import {
   ZoomControl,
   useMap,
 } from "react-leaflet";
-import { ThumbsUp, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  ThumbsUp,
+  ChevronLeft,
+  ChevronRight,
+  BarChartHorizontal,
+} from "lucide-react";
 import "./MapView.css";
 import type { LatLngExpression } from "leaflet";
 import L from "leaflet";
@@ -25,6 +30,7 @@ import {
 interface MapViewProps {
   reports: Report[];
   onReportClick: (report: Report) => void;
+  onShowStatsClick: () => void;
 }
 
 function HeatmapLayer({ points }: { points: [number, number, number?][] }) {
@@ -209,7 +215,11 @@ const ReportMedia = ({ report }: { report: Report }) => {
   );
 };
 
-const MapView = ({ reports, onReportClick }: MapViewProps) => {
+const MapView = ({
+  reports,
+  onReportClick,
+  onShowStatsClick,
+}: MapViewProps) => {
   const position: LatLngExpression =
     reports.length > 0
       ? [reports[0].location.lat, reports[0].location.lng]
@@ -260,6 +270,19 @@ const MapView = ({ reports, onReportClick }: MapViewProps) => {
     };
   }, []);
 
+  const buttonStyle: React.CSSProperties = {
+    background: "#fff",
+    border: "none",
+    borderRadius: "4px",
+    padding: "6px 10px",
+    cursor: "pointer",
+    fontWeight: 600,
+    boxShadow: "0 1px 4px rgba(0,0,0,0.3)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  };
+
   return (
     <MapContainer
       center={position}
@@ -294,6 +317,18 @@ const MapView = ({ reports, onReportClick }: MapViewProps) => {
             }}
           >
             {showHeatmap ? "Show Markers" : "Show Heatmap"}
+          </button>
+        </div>
+        <div
+          className="leaflet-control leaflet-bar"
+          style={{ marginTop: "10px" }}
+        >
+          <button
+            onClick={onShowStatsClick}
+            style={buttonStyle}
+            title="Show Statistics"
+          >
+            <BarChartHorizontal size={18} />
           </button>
         </div>
       </div>
