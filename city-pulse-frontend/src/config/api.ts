@@ -6,6 +6,8 @@ export const API_ENDPOINTS = {
   AUTH_LOGIN: `${API_BASE_URL}/api/auth/login`,
   AUTH_SIGNUP: `${API_BASE_URL}/api/auth/signup`,
   HEALTH: `${API_BASE_URL}/health`,
+  COMMENTS_BY_REPORT: (reportId: string) => `${API_BASE_URL}/api/reports/${reportId}/comments`,
+  COMMENT_BY_ID: (commentId: string) => `${API_BASE_URL}/api/comments/${commentId}`,
 } as const;
 
 export default API_BASE_URL;

@@ -7,6 +7,7 @@ DROP TRIGGER IF EXISTS update_reports_updated_at ON reports;
 -- Drop function
 DROP FUNCTION IF EXISTS update_updated_at_column();
 -- Drop tables (in reverse order of dependencies)
+DROP TABLE IF EXISTS report_comments CASCADE;
 DROP TABLE IF EXISTS report_upvotes CASCADE;
 DROP TABLE IF EXISTS report_images CASCADE;
 DROP TABLE IF EXISTS reports CASCADE;
@@ -71,6 +72,16 @@ CREATE TABLE report_upvotes (
 	UNIQUE(report_id, user_id) -- A user can only upvote a report once
 );
 
+-- Comments table (to store user comments on reports)
+CREATE TABLE report_comments (
+	id SERIAL PRIMARY KEY,
+	report_id INTEGER NOT NULL REFERENCES reports(id) ON DELETE CASCADE,
+	user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+	comment_text TEXT NOT NULL,
+	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Indexes for better query performance
 CREATE INDEX idx_reports_category ON reports(category);
 CREATE INDEX idx_reports_status ON reports(status);
@@ -79,6 +90,8 @@ CREATE INDEX idx_reports_created_by ON reports(created_by);
 CREATE INDEX idx_report_images_report_id ON report_images(report_id);
 CREATE INDEX idx_report_upvotes_report_id ON report_upvotes(report_id);
 CREATE INDEX idx_report_upvotes_user_id ON report_upvotes(user_id);
+CREATE INDEX idx_report_comments_report_id ON report_comments(report_id);
+CREATE INDEX idx_report_comments_user_id ON report_comments(user_id);
 
 -- Function to update updated_at timestamp automatically
 CREATE OR REPLACE FUNCTION update_updated_at_column()

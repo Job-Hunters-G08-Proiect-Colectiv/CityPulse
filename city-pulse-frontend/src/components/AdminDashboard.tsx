@@ -3,12 +3,14 @@ import { reportService } from '../services/reportService';
 import { getCurrentUser } from '../utils/authUtils';
 import type { Report, ReportCategory, ReportStatus, SeverityLevel } from '../types/report';
 import LogoutButton from './LogoutButton';
+import ReportDetailModal from './ReportDetailModal';
 import './AdminDashboard.css';
 
 function AdminDashboard() {
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingReport, setEditingReport] = useState<Report | null>(null);
+  const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [filterStatus, setFilterStatus] = useState<ReportStatus | 'ALL'>('ALL');
   const [searchTerm, setSearchTerm] = useState('');
   const user = getCurrentUser();
@@ -76,6 +78,28 @@ function AdminDashboard() {
     } catch (error) {
       console.error('Error updating status:', error);
       alert('Failed to update status');
+    }
+  };
+
+  const handleViewDetails = (report: Report) => {
+    setSelectedReport(report);
+  };
+
+  const handleUpvote = async (reportId: number) => {
+    try {
+      const report = reports.find(r => r.id === reportId);
+      if (!report) return;
+      
+      const updated = await reportService.updateReport(reportId, {
+        upvotes: report.upvotes + 1
+      });
+      setReports(reports.map(r => r.id === reportId ? updated : r));
+      // Update selected report if it's currently open
+      if (selectedReport?.id === reportId) {
+        setSelectedReport(updated);
+      }
+    } catch (error) {
+      console.error('Error upvoting report:', error);
     }
   };
 
@@ -206,6 +230,12 @@ function AdminDashboard() {
                 <td>{new Date(report.date).toLocaleDateString()}</td>
                 <td className="actions-cell">
                   <button 
+                    onClick={() => handleViewDetails(report)}
+                    className="btn-view"
+                  >
+                    View Details
+                  </button>
+                  <button 
                     onClick={() => handleEdit(report)}
                     className="btn-edit"
                   >
@@ -223,6 +253,14 @@ function AdminDashboard() {
           </tbody>
         </table>
       </div>
+
+      {/* Report Detail Modal (shows comments) */}
+      <ReportDetailModal
+        report={selectedReport}
+        isOpen={selectedReport !== null}
+        onClose={() => setSelectedReport(null)}
+        onUpvote={handleUpvote}
+      />
 
       {/* Edit Modal */}
       {editingReport && (
