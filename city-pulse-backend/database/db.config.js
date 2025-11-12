@@ -5,11 +5,11 @@ const { Pool } = require("pg");
 // !! IMPORTANT !! - Instead of changing credentials here, set them in the .env file at the backend root! //
 // Database connection configuration
 const pool = new Pool({
-  user: process.env.DATABASE_USERNAME || "postgres",
-  host: process.env.DATABASE_HOST || "localhost",
-  database: process.env.DATABASE_NAME || "CityPulseDb",
-  password: process.env.DATABASE_PASSWORD || "password",
-  port: process.env.DATABASE_PORT || 5432,
+  user: process.env.DB_USER || "postgres",
+  host: process.env.DB_HOST || "localhost",
+  database: process.env.DB_NAME || "CityPulseDb",
+  password: process.env.DB_PASSWORD || "password",
+  port: process.env.DB_PORT || 5432,
 });
 
 // Test connection
