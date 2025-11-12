@@ -1,8 +1,12 @@
 // express app (exported for testing)
 
-const express = require("express");
-const cors = require("cors");
-const path = require("path");
+const express = require('express');
+const cors = require('cors');
+const path = require('path');
+const reportRoutes = require('./routes/report.routes');
+const uploadRoutes = require('./routes/upload.routes');
+const authRoutes = require('./routes/auth.routes');
+const upvoteRoutes = require('./routes/upvote.routes');
 const reportRoutes = require("./routes/report.routes");
 const uploadRoutes = require("./routes/upload.routes");
 const authRoutes = require("./routes/auth.routes");
@@ -29,6 +33,7 @@ app.get("/health", (req, res) => {
   res.status(200).json({ status: "ok" });
 });
 
+app.use('/api', upvoteRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/api/auth", authRoutes);
 
