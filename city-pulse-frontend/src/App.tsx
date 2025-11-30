@@ -7,6 +7,7 @@ import MapContainer from './components/MapContainer';
 import NetworkErrorModal from "./components/NetworkErrorModal";
 import LogoutButton from './components/LogoutButton';
 import { reportService, type CreateReportDto } from './services/reportService';
+import { upvoteService } from './services/upvoteService';
 import { API_ENDPOINTS } from './config/api';
 import type { Report, ReportCategory, ReportStatus, SeverityLevel } from './types/report';
 import './App.css';
@@ -152,6 +153,22 @@ function App() {
           const map = new Map<number, ReportStatus>();
           for (const r of latest) map.set(r.id, r.status);
           prevStatusRef.current = map;
+
+          // Update the UI list with client-side filtering
+          const filtered = latest.filter(r => {
+            if (filterCategory !== 'ALL' && r.category !== filterCategory) return false;
+            if (filterStatus !== 'ALL' && r.status !== filterStatus) return false;
+            if (filterSeverity !== 'ALL' && r.severityLevel !== filterSeverity) return false;
+            if (searchTerm) {
+              const term = searchTerm.toLowerCase();
+              const matchesName = r.name.toLowerCase().includes(term);
+              const matchesDesc = r.description?.toLowerCase().includes(term);
+              const matchesAddr = r.address?.toLowerCase().includes(term);
+              if (!matchesName && !matchesDesc && !matchesAddr) return false;
+            }
+            return true;
+          });
+          setReports(filtered);
         }
       } catch (_) {
         // ignore background errors; connectivity is handled by the health ping
@@ -167,7 +184,7 @@ function App() {
       isCancelled = true;
       clearInterval(id);
     };
-  }, [loading]);
+  }, [loading, filterCategory, filterStatus, filterSeverity, searchTerm]);
 
   const handleCreateReport = async (reportData: Omit<Report, 'id' | 'date' | 'status' | 'upvotes'>) => {
     try {
@@ -194,32 +211,17 @@ function App() {
     setSelectedReport(report);
   };
 
-  const handleUpvote = async (reportId: number) => {
-    try {
-      const report = reports.find(r => r.id === reportId);
-      if (!report) return;
+  const handleUpvote = (reportId: number, newCount: number) => {
+    setReports(reports.map(r => 
+      r.id === reportId 
+        ? { ...r, upvotes: newCount }
+        : r
+    ));
 
-      // Update local state optimistically
-      setReports(reports.map(r => 
-        r.id === reportId 
-          ? { ...r, upvotes: r.upvotes + 1 }
-          : r
-      ));
-
-      if (selectedReport?.id === reportId) {
-        setSelectedReport({ ...selectedReport, upvotes: selectedReport.upvotes + 1 });
-      }
-
-      await reportService.updateReport(reportId, {
-        upvotes: report.upvotes + 1
-      });
-    } catch (err) {
-      console.error('Error upvoting report:', err);
-      fetchReports();
+    if (selectedReport?.id === reportId) {
+      setSelectedReport({ ...selectedReport, upvotes: newCount });
     }
   };
-
-  
 
   // Show loading screen only on initial load
   if (loading && reports.length === 0) {

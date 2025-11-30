@@ -17,7 +17,22 @@ function AdminDashboard() {
 
   useEffect(() => {
     fetchReports();
+    const interval = setInterval(fetchReportsSilent, 3000);
+    return () => clearInterval(interval);
   }, [filterStatus, searchTerm]);
+
+  const fetchReportsSilent = async () => {
+    try {
+      const filters: any = {};
+      if (filterStatus !== 'ALL') filters.status = filterStatus;
+      if (searchTerm.trim()) filters.search = searchTerm.trim();
+      
+      const data = await reportService.getAllReports(filters);
+      setReports(data);
+    } catch (error) {
+      console.error('Error fetching reports silently:', error);
+    }
+  };
 
   const fetchReports = async () => {
     try {
@@ -85,14 +100,12 @@ function AdminDashboard() {
     setSelectedReport(report);
   };
 
-  const handleUpvote = async (reportId: number) => {
+  const handleUpvote = async (reportId: number,  newCount: number) => {
     try {
       const report = reports.find(r => r.id === reportId);
       if (!report) return;
       
-      const updated = await reportService.updateReport(reportId, {
-        upvotes: report.upvotes + 1
-      });
+      const updated = { ...report, upvotes: newCount };
       setReports(reports.map(r => r.id === reportId ? updated : r));
       // Update selected report if it's currently open
       if (selectedReport?.id === reportId) {
