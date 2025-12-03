@@ -5,8 +5,10 @@ const httpGetAllReports = async (req, res) => {
         const filters = {
             category: req.query.category,
             status: req.query.status,
-            severityLevel: req.query.severityLevel,
-            search: req.query.search
+            // backend repository expects `severity`, not `severityLevel`
+            severity: req.query.severityLevel,
+            search: req.query.search,
+            cityId: req.query.cityId ? Number(req.query.cityId) : undefined,
         };
         const reports = await reportService.getAllReports(filters);
         res.status(200).json(reports);

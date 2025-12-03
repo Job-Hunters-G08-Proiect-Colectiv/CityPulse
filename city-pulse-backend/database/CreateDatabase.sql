@@ -12,6 +12,8 @@ DROP TABLE IF EXISTS report_comments CASCADE;
 DROP TABLE IF EXISTS report_upvotes CASCADE;
 DROP TABLE IF EXISTS report_images CASCADE;
 DROP TABLE IF EXISTS reports CASCADE;
+DROP TABLE IF EXISTS districts CASCADE; 
+DROP TABLE IF EXISTS cities CASCADE;    
 DROP TABLE IF EXISTS users CASCADE;
 -- Drop ENUM types
 DROP TYPE IF EXISTS user_type;
@@ -38,6 +40,23 @@ CREATE TABLE users (
 	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE cities (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    country VARCHAR(100),
+    lat DECIMAL(10, 8), 
+    lng DECIMAL(11, 8),
+	geom GEOMETRY(MULTIPOLYGON, 4326)
+);
+
+CREATE TABLE districts (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    city_id INTEGER REFERENCES cities(id) ON DELETE CASCADE,
+    geom GEOMETRY(MULTIPOLYGON, 4326) NOT NULL,
+    UNIQUE(name, city_id)
+);
+
 -- Reports table
 CREATE TABLE reports (
 	id SERIAL PRIMARY KEY,
@@ -52,6 +71,9 @@ CREATE TABLE reports (
 	upvotes INTEGER DEFAULT 0,
 	description TEXT,
 	created_by INTEGER REFERENCES users(id) ON DELETE SET NULL, -- Link to user who created it
+	city_id INTEGER REFERENCES cities(id) ON DELETE SET NULL,
+    district_id INTEGER REFERENCES districts(id) ON DELETE SET NULL,
+    geom GEOMETRY(POINT, 4326),
 	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -93,6 +115,9 @@ CREATE INDEX idx_report_upvotes_report_id ON report_upvotes(report_id);
 CREATE INDEX idx_report_upvotes_user_id ON report_upvotes(user_id);
 CREATE INDEX idx_report_comments_report_id ON report_comments(report_id);
 CREATE INDEX idx_report_comments_user_id ON report_comments(user_id);
+CREATE INDEX idx_reports_city_id ON reports(city_id);       
+CREATE INDEX idx_reports_geom ON reports USING GIST (geom); 
+CREATE INDEX idx_districts_geom ON districts USING GIST (geom);
 
 -- Function to update updated_at timestamp automatically
 CREATE OR REPLACE FUNCTION update_updated_at_column()

@@ -2,7 +2,7 @@ const pool = require('../database/db.config');
 
 // Find all reports with optional filters
 const findAll = async (filters = {}) => {
-  const { category, status, severity, search } = filters;
+  const { category, status, severity, search, cityId } = filters;
 
   let query = `
     SELECT
@@ -18,6 +18,7 @@ const findAll = async (filters = {}) => {
       r.upvotes,
       r.description,
       r.created_by AS "createdBy",
+      r.city_id AS "cityId",
       COALESCE(
         json_agg(
           DISTINCT ri.image_url
@@ -48,6 +49,12 @@ const findAll = async (filters = {}) => {
   if (severity) {
     query += ` AND r.severity_level = $${paramCounter}`;
     params.push(severity);
+    paramCounter++;
+  }
+
+  if (cityId) {
+    query += ` AND r.city_id = $${paramCounter}`;
+    params.push(cityId);
     paramCounter++;
   }
 
@@ -86,7 +93,8 @@ const findAll = async (filters = {}) => {
       upvotes: row.upvotes,
       description: row.description,
       images: row.images || [],
-      createdBy: row.createdBy
+      createdBy: row.createdBy,
+      cityId: row.cityId
     }));
   } catch (error) {
     console.error('Database error in findAll:', error);
@@ -110,6 +118,7 @@ const findById = async (id) => {
       r.upvotes,
       r.description,
       r.created_by AS "createdBy",
+      r.city_id AS "cityId",
       COALESCE(
         json_agg(
           DISTINCT ri.image_url
@@ -146,7 +155,8 @@ const findById = async (id) => {
       upvotes: row.upvotes,
       description: row.description,
       images: row.images || [],
-      createdBy: row.createdBy
+      createdBy: row.createdBy,
+      cityId: row.cityId
     };
   } catch (error) {
     console.error('Database error in findById:', error);
@@ -161,30 +171,66 @@ const create = async (reportModel) => {
   try {
     await client.query('BEGIN');
 
+    // Check to make for the address to be in the current city
+    const validationQuery = `
+      SELECT id 
+      FROM cities 
+      WHERE id = $1 
+      AND geom IS NOT NULL 
+      AND ST_Contains(geom, ST_SetSRID(ST_MakePoint($2, $3), 4326))
+    `;
+
+    const validationResult = await client.query(validationQuery, [
+      reportModel.cityId,        // $1
+      reportModel.location.lng,  // $2 
+      reportModel.location.lat   // $3
+    ]);
+
+    if (validationResult.rows.length === 0) {
+      throw new Error("Location is outside the current city!");
+    }
+
     // Insert report
     const insertReportQuery = `
       INSERT INTO reports (
         name, location_lat, location_lng, address,
-        category, severity_level, status, description, upvotes, created_by
+        category, severity_level, status, description, upvotes, created_by, city_id, geom
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-      RETURNING *
+      VALUES (
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11,
+        ST_SetSRID(ST_MakePoint($12, $13), 4326)
+      )
+      RETURNING id
     `;
-     
+
     const reportResult = await client.query(insertReportQuery, [
-      reportModel.name,
-      reportModel.location.lat,
-      reportModel.location.lng,
-      reportModel.address,
-      reportModel.category,
-      reportModel.severityLevel,
-      reportModel.status,
-      reportModel.description || null,
-      reportModel.upvotes,
-      reportModel.createdBy
+      reportModel.name,               // $1
+      reportModel.location.lat,       // $2
+      reportModel.location.lng,       // $3
+      reportModel.address,            // $4
+      reportModel.category,           // $5
+      reportModel.severityLevel,      // $6
+      reportModel.status,             // $7
+      reportModel.description || null,// $8
+      reportModel.upvotes,            // $9
+      reportModel.createdBy,          // $10
+      reportModel.cityId,             // $11
+      reportModel.location.lng,       // $12 (for geom)
+      reportModel.location.lat        // $13 (for geom)
     ]);
 
-    const newReport = reportResult.rows[0];
+    const newReportId = reportResult.rows[0].id;
+
+    // Auto-detect district
+    await client.query(
+      `UPDATE reports r
+       SET district_id = d.id
+       FROM districts d
+       WHERE r.id = $1
+         AND d.geom IS NOT NULL
+         AND ST_Contains(d.geom, r.geom)`,
+      [newReportId]
+    );
 
     // Insert images if any
     if (reportModel.images && reportModel.images.length > 0) {
@@ -194,14 +240,14 @@ const create = async (reportModel) => {
       `;
 
       for (const imageUrl of reportModel.images) {
-        await client.query(insertImageQuery, [newReport.id, imageUrl]);
+        await client.query(insertImageQuery, [newReportId, imageUrl]);
       }
     }
 
     await client.query('COMMIT');
 
     // Return formatted report
-    const finalReport = await findById(newReport.id);
+    const finalReport = await findById(newReportId);
     return finalReport;
   } catch (error) {
     await client.query('ROLLBACK');
@@ -276,6 +322,12 @@ const updateById = async (id, dataToUpdate) => {
     if (dataToUpdate.upvotes !== undefined) {
         fields.push(`upvotes = $${paramCounter}`);
         values.push(dataToUpdate.upvotes);
+        paramCounter++;
+    }
+    
+    if (dataToUpdate.cityId !== undefined) {
+        fields.push(`city_id = $${paramCounter}`);
+        values.push(dataToUpdate.cityId);
         paramCounter++;
     }
         

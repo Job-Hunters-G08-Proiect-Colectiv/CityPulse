@@ -10,6 +10,8 @@ export interface CreateReportDto {
   address: string;
   severityLevel: SeverityLevel;
   images?: string[];
+   // optional, but recommended so new reports are linked to the selected city
+  cityId?: number;
 }
 
 export interface UpdateReportDto {
@@ -27,12 +29,14 @@ export const reportService = {
     status?: ReportStatus;
     severityLevel?: SeverityLevel;
     search?: string;
+    cityId?: number;
   }): Promise<Report[]> => {
     const params = new URLSearchParams();
     if (filters?.category) params.append('category', filters.category);
     if (filters?.status) params.append('status', filters.status);
     if (filters?.severityLevel) params.append('severityLevel', filters.severityLevel);
     if (filters?.search) params.append('search', filters.search);
+    if (filters?.cityId) params.append('cityId', String(filters.cityId));
 
     const response = await axiosInstance.get<Report[]>(
       `${API_ENDPOINTS.REPORTS}?${params.toString()}`

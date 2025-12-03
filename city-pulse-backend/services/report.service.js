@@ -66,6 +66,10 @@ const addNewReport = async (reportData, userId) => {
     }
     
     const reportModel = new Report(name, location, category, severityLevel, address, images, description, userId);
+    // attach cityId if provided from client (optional)
+    if (reportData.cityId) {
+        reportModel.cityId = reportData.cityId;
+    }
 
     return await reportRepository.create(reportModel);
 };

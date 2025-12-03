@@ -9,6 +9,7 @@ const commentRoutes = require('./routes/comment.routes');
 const upvoteRoutes = require('./routes/upvote.routes');
 const authRoutes = require("./routes/auth.routes");
 const statisticsRoutes = require("./routes/stats.routes");
+const cityRoutes = require("./routes/city.routes");
 
 const app = express();
 
@@ -37,5 +38,6 @@ app.use('/api', upvoteRoutes);
 app.use("/api/reports", reportRoutes);
 
 app.use("/api/statistics", statisticsRoutes);
+app.use('/api/cities', cityRoutes);
 
 module.exports = app;

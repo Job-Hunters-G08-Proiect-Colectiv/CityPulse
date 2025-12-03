@@ -29,6 +29,7 @@ function App() {
   const [networkError, setNetworkError] = useState(false);
   const prevStatusRef = useRef<Map<number, ReportStatus>>(new Map());
   const [notifications, setNotifications] = useState<UINotification[]>([]);
+  const [selectedCityId, setSelectedCityId] = useState<number | null>(null);
 
   // Debounced search effect
   useEffect(() => {
@@ -37,7 +38,7 @@ function App() {
     }, 300); // Wait 300ms after user stops typing
 
     return () => clearTimeout(timeoutId);
-  }, [searchTerm, filterCategory, filterStatus, filterSeverity]);
+  }, [searchTerm, filterCategory, filterStatus, filterSeverity, selectedCityId]);
 
   // Background connectivity ping every 3 seconds
   useEffect(() => {
@@ -88,9 +89,14 @@ function App() {
       if (filterStatus !== 'ALL') filters.status = filterStatus;
       if (filterSeverity !== 'ALL') filters.severityLevel = filterSeverity;
       if (searchTerm.trim()) filters.search = searchTerm.trim();
+      if (selectedCityId) filters.cityId = selectedCityId;
 
       const data = await reportService.getAllReports(filters);
-      setReports(data);
+      // Ensure no duplicate reports (by id) in UI state
+      const uniqueById = Array.from(
+        new Map(data.map((r: Report) => [r.id, r])).values()
+      );
+      setReports(uniqueById);
       // initialize previous statuses map on active dataset to avoid initial-change noise
       const map = new Map<number, ReportStatus>();
       for (const r of data) {
@@ -195,7 +201,8 @@ function App() {
         location: reportData.location,
         address: reportData.address,
         severityLevel: reportData.severityLevel,
-        images: reportData.images
+        images: reportData.images,
+        cityId: selectedCityId ?? undefined,
       };
 
       const newReport = await reportService.createReport(createDto);
@@ -203,7 +210,8 @@ function App() {
       setIsModalOpen(false);
     } catch (err) {
       console.error('Error creating report:', err);
-      alert('Failed to create report. Please try again.');
+      const message = (err as any)?.response?.data?.error || 'Failed to create report. Please try again.';
+      alert(message);
     }
   };
 
@@ -248,7 +256,11 @@ function App() {
   return (
     <div className="app">
       <LogoutButton />
-      <MapContainer reports={reports} onReportClick={handleReportClick} />
+      <MapContainer
+        reports={reports}
+        onReportClick={handleReportClick}
+        onCityChange={setSelectedCityId}
+      />
       
       {/* Show refreshing indicator without unmounting UI */}
       {isRefreshing && (
