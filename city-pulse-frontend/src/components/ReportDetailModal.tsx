@@ -9,21 +9,28 @@ interface ReportDetailModalProps {
   report: Report | null;
   isOpen: boolean;
   onClose: () => void;
-  onUpvote?: (reportId: number) => void;
+  onUpvote?: (reportId: number, newCount: number) => void;
 }
 
 const ReportDetailModal = ({ report, isOpen, onClose, onUpvote }: ReportDetailModalProps) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [hasUpvoted, setHasUpvoted] = useState(false);
-  const [upvoteCount, setUpvoteCount] = useState(0);
   const [isUpvoting, setIsUpvoting] = useState(false);
+  const [localUpvoteCount, setLocalUpvoteCount] = useState(0);
+
+  useEffect(() => {
+    if (report) {
+      setLocalUpvoteCount(report.upvotes);
+    }
+  }, [report?.upvotes]);
 
   useEffect(() => {
     if (report && isOpen) {
-      setUpvoteCount(report.upvotes);
+      setCurrentImageIndex(0);
+      setLocalUpvoteCount(report.upvotes);
       checkUpvoteStatus();
     }
-  }, [report, isOpen]);
+  }, [report?.id, isOpen]);
 
   const checkUpvoteStatus = async () => {
     if (!report) return;
@@ -39,32 +46,37 @@ const ReportDetailModal = ({ report, isOpen, onClose, onUpvote }: ReportDetailMo
       setHasUpvoted(Boolean(result.upvoted));
     } catch (error) {
       console.error('Error checking upvote status:', error);
+      setHasUpvoted(false);
     }
   };
 
   const handleUpvote = async () => {
-    if (!report) return;
-
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-      alert('Please login to upvote.');
-      return;
-    }
+    if (!report || isUpvoting) return;
 
     setIsUpvoting(true);
 
     try {
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        alert('Please login to upvote.');
+        setIsUpvoting(false);
+        return;
+      }
+
+      // Toggle upvote on backend
       const result = await upvoteService.toggleUpvote(report.id, token);
-
-      // Update local state
-      const newUpvoted = Boolean(result.upvoted);
-      setHasUpvoted(newUpvoted);
-
-      setUpvoteCount(result.upvoteCount);
-
-    } catch (error: any) {
-      console.error('Error toggling upvote:', error);
-      alert(error.message || 'Failed to toggle upvote.');
+      
+      // Update local state immediately from backend response
+      setHasUpvoted(result.upvoted);
+      setLocalUpvoteCount(result.upvoteCount);
+      
+      // Call parent's upvote handler to update the count in the list
+      if (onUpvote) {
+        onUpvote(report.id, result.upvoteCount); // Pass the new count
+      }
+    } catch (error) {
+      console.error('Error in upvote handler:', error);
+      alert('Failed to toggle upvote. Please try again.');
     } finally {
       setIsUpvoting(false);
     }
@@ -225,7 +237,7 @@ const ReportDetailModal = ({ report, isOpen, onClose, onUpvote }: ReportDetailMo
                   disabled={isUpvoting}
               >
                 <ThumbsUp size={18} fill={hasUpvoted ? 'currentColor' : 'none'} />
-                <span>{hasUpvoted ? 'Upvoted' : 'Upvote'} ({upvoteCount})</span>
+                <span>{hasUpvoted ? 'Upvoted' : 'Upvote'} ({localUpvoteCount})</span>
               </button>
             </div>
           </div>

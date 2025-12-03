@@ -31,13 +31,14 @@ const httpCheckUpvoteStatus = async (req, res) => {
             return res.status(400).json({ error: 'Invalid report ID' });
         }
 
-        const hasUpvoted = await upvoteService.checkUpvoteStatus(userId, reportId);
-        res.status(200).json({ upvoted: hasUpvoted });
+        const result = await upvoteService.checkUpvoteStatus(userId, reportId);
+        res.status(200).json(result);
     } catch (error) {
         console.error('Error checking upvote status:', error);
         res.status(500).json({ error: 'Failed to check upvote status' });
     }
 };
+
 module.exports = {
     httpToggleUpvote,
     httpCheckUpvoteStatus,

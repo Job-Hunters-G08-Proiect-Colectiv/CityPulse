@@ -1,7 +1,7 @@
 import API_BASE_URL from '../config/api.ts';
 
 export const upvoteService = {
-    async toggleUpvote(reportId: number, token: string) {
+    async toggleUpvote(reportId: number, token: string): Promise<{ upvoted: boolean; upvoteCount: number }> {
         const response = await fetch(`${API_BASE_URL}/api/reports/${reportId}/upvote`, {
             method: 'POST',
             headers: {
@@ -20,7 +20,7 @@ export const upvoteService = {
         return response.json();
     },
 
-    async checkUpvoteStatus(reportId: number, token: string) {
+    async checkUpvoteStatus(reportId: number, token: string): Promise<{ upvoted: boolean }> {
         const response = await fetch(`${API_BASE_URL}/api/reports/${reportId}/upvote-status`, {
             method: 'GET',
             headers: {
