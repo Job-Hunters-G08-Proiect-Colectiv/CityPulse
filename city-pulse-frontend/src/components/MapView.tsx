@@ -13,11 +13,10 @@ import {
   BarChartHorizontal,
 } from "lucide-react";
 import "./MapView.css";
-import type { LatLngExpression } from "leaflet";
 import L from "leaflet";
 import "leaflet.heat";
 import MarkerClusterGroup from "react-leaflet-markercluster";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { severityToIntensity, type Report } from "../types/report";
 import { getImageUrl } from "../utils/imageUtils";
 import {
@@ -29,8 +28,30 @@ import {
 
 interface MapViewProps {
   reports: Report[];
+  cityCenter: [number, number]; // city center coords, so that the map can fly to that city
   onReportClick: (report: Report) => void;
   onShowStatsClick: () => void;
+  // used only to reset clustering layers cleanly when switching city
+  cityId?: number | null;
+}
+
+function MapController({ center }: { center: [number, number] }) {
+  const map = useMap();
+  const [lat, lng] = center;
+
+  useEffect(() => {
+    if (!map) return;
+
+    const current = map.getCenter();
+    // Only move the map if the city center actually changed
+    if (Math.abs(current.lat - lat) < 1e-6 && Math.abs(current.lng - lng) < 1e-6) {
+      return;
+    }
+
+    map.flyTo([lat, lng], 13, { duration: 1.5 });
+  }, [lat, lng, map]);
+
+  return null;
 }
 
 function HeatmapLayer({ points }: { points: [number, number, number?][] }) {
@@ -217,23 +238,22 @@ const ReportMedia = ({ report }: { report: Report }) => {
 
 const MapView = ({
   reports,
+  cityCenter,
   onReportClick,
   onShowStatsClick,
+  cityId,
 }: MapViewProps) => {
-  const position: LatLngExpression =
-    reports.length > 0
-      ? [reports[0].location.lat, reports[0].location.lng]
-      : [46.77, 23.62];
-
-  const topLeftBound = L.latLng(46.876, 23.323);
-  const bottomRightBound = L.latLng(46.688, 23.781);
-  const maxBounds = L.latLngBounds(topLeftBound, bottomRightBound);
-
+  // Final safety net: ensure we never render duplicate reports on the map
+  const uniqueReports = useMemo(
+    () =>
+      Array.from(new Map(reports.map((r) => [r.id, r])).values()),
+    [reports]
+  );
   const markerRefs = useRef<Record<number, L.Marker | null>>({});
   const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [showHeatmap, setShowHeatmap] = useState(false);
 
-  const heatPoints = reports.map(
+  const heatPoints = uniqueReports.map(
     (r) =>
       [
         r.location.lat,
@@ -285,20 +305,19 @@ const MapView = ({
 
   return (
     <MapContainer
-      center={position}
+      center={cityCenter}
       minZoom={12}
       zoom={13}
       id="map"
       zoomControl={false}
-      maxBounds={maxBounds}
       doubleClickZoom={false}
     >
+      <MapController center={cityCenter} />
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution="OpenStreetMap contributors"
       />
       <ZoomControl position="topright" />
-      center={position}
       <div
         className="leaflet-top leaflet-right"
         style={{ zIndex: 1000, marginTop: "80px" }}
@@ -335,8 +354,10 @@ const MapView = ({
       {showHeatmap ? (
         <HeatmapLayer points={heatPoints} />
       ) : (
-        <MarkerClusterGroup>
-          {reports.map((report) => (
+        // Keyed by city so the cluster layer is fully reset when switching cities,
+        // while keeping the map instance (and flyTo animation) intact.
+        <MarkerClusterGroup key={cityId ?? "default-city"}>
+          {uniqueReports.map((report) => (
             <Marker
               key={report.id}
               position={[report.location.lat, report.location.lng]}
