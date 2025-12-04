@@ -23,7 +23,11 @@ interface MapContainerProps {
   onCityChange?: (cityId: number | null) => void;
 }
 
-const MapContainer = ({ reports, onReportClick, onCityChange }: MapContainerProps) => {
+const MapContainer = ({
+  reports,
+  onReportClick,
+  onCityChange,
+}: MapContainerProps) => {
   const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
   const [mapKey, setMapKey] = useState(0);
 
@@ -32,30 +36,33 @@ const MapContainer = ({ reports, onReportClick, onCityChange }: MapContainerProp
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const handleCitySelect = useCallback(async (city: City) => {
-    let cityWithBounds = { ...city };
-    if (!city.boundingbox) {
-      try {
-        const res = await fetch(
-          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
-            city.name
-          )}&format=json&limit=1`
-        );
-        const data = await res.json();
-        if (data && data.length > 0 && data[0].boundingbox) {
-          cityWithBounds.boundingbox = data[0].boundingbox;
+  const handleCitySelect = useCallback(
+    async (city: City) => {
+      let cityWithBounds = { ...city };
+      if (!city.boundingbox) {
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
+              city.name
+            )}&format=json&limit=1`
+          );
+          const data = await res.json();
+          if (data && data.length > 0 && data[0].boundingbox) {
+            cityWithBounds.boundingbox = data[0].boundingbox;
+          }
+        } catch (err) {
+          console.error("Failed to fetch city bounding box", err);
         }
-      } catch (err) {
-        console.error("Failed to fetch city bounding box", err);
       }
-    }
-    
-    setSelectedCity(cityWithBounds);
-    if (onCityChange) {
-      onCityChange(city.id);
-    }
-    setIsDropdownOpen(false);
-  }, [onCityChange]);
+
+      setSelectedCity(cityWithBounds);
+      if (onCityChange) {
+        onCityChange(city.id);
+      }
+      setIsDropdownOpen(false);
+    },
+    [onCityChange]
+  );
 
   // Fetch cities, one time
   useEffect(() => {
@@ -82,7 +89,10 @@ const MapContainer = ({ reports, onReportClick, onCityChange }: MapContainerProp
   // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsDropdownOpen(false);
       }
     };
@@ -127,10 +137,35 @@ const MapContainer = ({ reports, onReportClick, onCityChange }: MapContainerProp
   const maxBounds: LatLngBoundsExpression | undefined = useMemo(() => {
     if (!selectedCity?.boundingbox) return undefined;
     return [
-      [parseFloat(selectedCity.boundingbox[0]), parseFloat(selectedCity.boundingbox[2])],
-      [parseFloat(selectedCity.boundingbox[1]), parseFloat(selectedCity.boundingbox[3])],
+      [
+        parseFloat(selectedCity.boundingbox[0]),
+        parseFloat(selectedCity.boundingbox[2]),
+      ],
+      [
+        parseFloat(selectedCity.boundingbox[1]),
+        parseFloat(selectedCity.boundingbox[3]),
+      ],
     ];
   }, [selectedCity]);
+
+  if (!selectedCity) {
+    return (
+      <div className="map-container">
+        <div className="map-placeholder">
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              height: "100%",
+            }}
+          >
+            Loading map...
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="map-container">
@@ -142,7 +177,7 @@ const MapContainer = ({ reports, onReportClick, onCityChange }: MapContainerProp
               className="custom-select-trigger"
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             >
-              <span>{selectedCity?.name || "Select a City"}</span>
+              <span>{selectedCity.name}</span>
             </button>
             {isDropdownOpen && (
               <div className="custom-select-options">
@@ -150,7 +185,7 @@ const MapContainer = ({ reports, onReportClick, onCityChange }: MapContainerProp
                   <div
                     key={city.id}
                     className={`custom-select-option ${
-                      selectedCity?.id === city.id ? "selected" : ""
+                      selectedCity.id === city.id ? "selected" : ""
                     }`}
                     onClick={() => handleCitySelect(city)}
                   >
@@ -164,20 +199,14 @@ const MapContainer = ({ reports, onReportClick, onCityChange }: MapContainerProp
       </div>
 
       <div className="map-placeholder" key={mapKey}>
-        {selectedCity ? (
-          <MapView
-            reports={reports}
-            cityCenter={cityCenter}
-            cityId={selectedCity.id}
-            onReportClick={onReportClick}
-            onShowStatsClick={() => setIsStatsModalOpen(true)}
-            maxBounds={maxBounds}
-          />
-        ) : (
-          <div style={{display:'flex', alignItems:'center', justifyContent:'center', height:'100%'}}>
-            Loading map...
-          </div>
-        )}
+        <MapView
+          reports={reports}
+          cityCenter={cityCenter}
+          cityId={selectedCity.id}
+          onReportClick={onReportClick}
+          onShowStatsClick={() => setIsStatsModalOpen(true)}
+          maxBounds={maxBounds}
+        />
       </div>
 
       <Modal
