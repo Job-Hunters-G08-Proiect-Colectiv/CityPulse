@@ -13,7 +13,8 @@ import {
   BarChartHorizontal,
 } from "lucide-react";
 import "./MapView.css";
-import L, { LatLngBoundsExpression } from "leaflet";
+import L from "leaflet";
+import type { LatLngBoundsExpression } from "leaflet";
 import "leaflet.heat";
 import MarkerClusterGroup from "react-leaflet-markercluster";
 import { useEffect, useRef, useState, useMemo } from "react";
@@ -43,13 +44,13 @@ function MapController({
   maxBounds?: LatLngBoundsExpression;
 }) {
   const map = useMap();
+  const isFirstRender = useRef(true);
 
   useEffect(() => {
     if (!map) return;
 
     const [lat, lng] = center;
     const currentCenter = map.getCenter();
-    const currentZoom = map.getZoom();
 
     // Check if the map is already at the target center
     const isAtCenter =
@@ -62,8 +63,16 @@ function MapController({
       return;
     }
 
+    // On first render, set view immediately without animation
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      map.setView([lat, lng], 13, { animate: false });
+      if (maxBounds) map.setMaxBounds(maxBounds);
+      return;
+    }
+
     // Clear existing bounds to allow flight from outside
-    map.setMaxBounds(null);
+    map.setMaxBounds(undefined);
 
     const onMoveEnd = () => {
       if (maxBounds) {
@@ -276,8 +285,7 @@ const MapView = ({
   maxBounds,
 }: MapViewProps) => {
   const uniqueReports = useMemo(
-    () =>
-      Array.from(new Map(reports.map((r) => [r.id, r])).values()),
+    () => Array.from(new Map(reports.map((r) => [r.id, r])).values()),
     [reports]
   );
   const markerRefs = useRef<Record<number, L.Marker | null>>({});

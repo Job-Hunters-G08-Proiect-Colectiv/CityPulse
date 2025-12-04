@@ -5,7 +5,9 @@ exports.up = async (pgm) => {
     id: "id",
     name: { type: "varchar(100)", notNull: true, unique: true },
     country: { type: "varchar(100)" },
-    geom: { type: "geometry(POLYGON,4326)", notNull: false },
+    lat: { type: "decimal(10, 8)" },
+    lng: { type: "decimal(11, 8)" },
+    geom: { type: "geometry(MULTIPOLYGON,4326)", notNull: false },
   });
 
   // Districts table
@@ -14,6 +16,10 @@ exports.up = async (pgm) => {
     name: { type: "varchar(100)", notNull: true },
     city_id: { type: "integer", references: '"cities"', onDelete: "CASCADE" },
     geom: { type: "geometry(MULTIPOLYGON,4326)", notNull: true },
+  });
+
+  pgm.addConstraint("districts", "districts_unique_name_city_id", {
+    unique: ["name", "city_id"],
   });
 };
 
