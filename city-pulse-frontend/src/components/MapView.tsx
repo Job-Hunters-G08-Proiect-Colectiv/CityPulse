@@ -13,7 +13,7 @@ import {
   BarChartHorizontal,
 } from "lucide-react";
 import "./MapView.css";
-import L from "leaflet";
+import L, { LatLngBoundsExpression } from "leaflet";
 import "leaflet.heat";
 import MarkerClusterGroup from "react-leaflet-markercluster";
 import { useEffect, useRef, useState, useMemo } from "react";
@@ -28,28 +28,59 @@ import {
 
 interface MapViewProps {
   reports: Report[];
-  cityCenter: [number, number]; // city center coords, so that the map can fly to that city
+  cityCenter: [number, number];
   onReportClick: (report: Report) => void;
   onShowStatsClick: () => void;
-  // used only to reset clustering layers cleanly when switching city
   cityId?: number | null;
+  maxBounds?: LatLngBoundsExpression;
 }
 
-function MapController({ center }: { center: [number, number] }) {
+function MapController({
+  center,
+  maxBounds,
+}: {
+  center: [number, number];
+  maxBounds?: LatLngBoundsExpression;
+}) {
   const map = useMap();
-  const [lat, lng] = center;
 
   useEffect(() => {
     if (!map) return;
 
-    const current = map.getCenter();
-    // Only move the map if the city center actually changed
-    if (Math.abs(current.lat - lat) < 1e-6 && Math.abs(current.lng - lng) < 1e-6) {
+    const [lat, lng] = center;
+    const currentCenter = map.getCenter();
+    const currentZoom = map.getZoom();
+
+    // Check if the map is already at the target center
+    const isAtCenter =
+      Math.abs(currentCenter.lat - lat) < 1e-6 &&
+      Math.abs(currentCenter.lng - lng) < 1e-6;
+
+    if (isAtCenter) {
+      // If already at the center, just apply bounds
+      if (maxBounds) map.setMaxBounds(maxBounds);
       return;
     }
 
+    // Clear existing bounds to allow flight from outside
+    map.setMaxBounds(null);
+
+    const onMoveEnd = () => {
+      if (maxBounds) {
+        map.setMaxBounds(maxBounds);
+      }
+      // Clean up the event listener
+      map.off("moveend", onMoveEnd);
+    };
+
+    map.on("moveend", onMoveEnd);
     map.flyTo([lat, lng], 13, { duration: 1.5 });
-  }, [lat, lng, map]);
+
+    // Cleanup in case the component unmounts or props change mid-flight
+    return () => {
+      map.off("moveend", onMoveEnd);
+    };
+  }, [center, maxBounds, map]);
 
   return null;
 }
@@ -242,8 +273,8 @@ const MapView = ({
   onReportClick,
   onShowStatsClick,
   cityId,
+  maxBounds,
 }: MapViewProps) => {
-  // Final safety net: ensure we never render duplicate reports on the map
   const uniqueReports = useMemo(
     () =>
       Array.from(new Map(reports.map((r) => [r.id, r])).values()),
@@ -311,8 +342,9 @@ const MapView = ({
       id="map"
       zoomControl={false}
       doubleClickZoom={false}
+      // maxBounds removed from here to allow MapController to manage it
     >
-      <MapController center={cityCenter} />
+      <MapController center={cityCenter} maxBounds={maxBounds} />
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution="OpenStreetMap contributors"
@@ -354,8 +386,6 @@ const MapView = ({
       {showHeatmap ? (
         <HeatmapLayer points={heatPoints} />
       ) : (
-        // Keyed by city so the cluster layer is fully reset when switching cities,
-        // while keeping the map instance (and flyTo animation) intact.
         <MarkerClusterGroup key={cityId ?? "default-city"}>
           {uniqueReports.map((report) => (
             <Marker

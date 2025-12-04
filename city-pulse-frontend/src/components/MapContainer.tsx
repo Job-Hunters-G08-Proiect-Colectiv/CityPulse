@@ -1,10 +1,11 @@
 import "./MapContainer.css";
 import MapView from "./MapView";
 import type { Report } from "../types/report";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import Modal from "react-modal";
 import StatisticsDashboard from "./StatsDashboard";
 import { MapPin, X } from "lucide-react";
+import type { LatLngBoundsExpression } from "leaflet";
 
 Modal.setAppElement("#root");
 
@@ -13,6 +14,7 @@ interface City {
   name: string;
   lat: number;
   lng: number;
+  boundingbox?: [string, string, string, string];
 }
 
 interface MapContainerProps {
@@ -27,6 +29,33 @@ const MapContainer = ({ reports, onReportClick, onCityChange }: MapContainerProp
 
   const [cities, setCities] = useState<City[]>([]);
   const [selectedCity, setSelectedCity] = useState<City | null>(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const handleCitySelect = useCallback(async (city: City) => {
+    let cityWithBounds = { ...city };
+    if (!city.boundingbox) {
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
+            city.name
+          )}&format=json&limit=1`
+        );
+        const data = await res.json();
+        if (data && data.length > 0 && data[0].boundingbox) {
+          cityWithBounds.boundingbox = data[0].boundingbox;
+        }
+      } catch (err) {
+        console.error("Failed to fetch city bounding box", err);
+      }
+    }
+    
+    setSelectedCity(cityWithBounds);
+    if (onCityChange) {
+      onCityChange(city.id);
+    }
+    setIsDropdownOpen(false);
+  }, [onCityChange]);
 
   // Fetch cities, one time
   useEffect(() => {
@@ -36,34 +65,30 @@ const MapContainer = ({ reports, onReportClick, onCityChange }: MapContainerProp
         const data = await res.json();
         setCities(data);
 
-        // Prefer Cluj-Napoca as default if it exists, otherwise first city
         if (data.length > 0) {
           const preferred =
             data.find((c: City) => c.name.toLowerCase().includes("cluj")) ||
             data[0];
-          setSelectedCity(preferred);
-          if (onCityChange) {
-            onCityChange(preferred.id);
-          }
+          // Set initial city without triggering a new report fetch
+          handleCitySelect(preferred);
         }
       } catch (err) {
         console.error("Failed to fetch cities", err);
       }
     };
     fetchCities();
-  }, []);
+  }, [handleCitySelect]);
 
-  // Dropdown handler
-  const handleCityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const cityId = parseInt(e.target.value);
-    const city = cities.find((c) => c.id === cityId);
-    if (city) {
-      setSelectedCity(city);
-      if (onCityChange) {
-        onCityChange(city.id);
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
       }
-    }
-  };
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     if (!isStatsModalOpen) {
@@ -94,22 +119,47 @@ const MapContainer = ({ reports, onReportClick, onCityChange }: MapContainerProp
     },
   };
 
+  const cityCenter: [number, number] = useMemo(
+    () => (selectedCity ? [selectedCity.lat, selectedCity.lng] : [0, 0]),
+    [selectedCity]
+  );
+
+  const maxBounds: LatLngBoundsExpression | undefined = useMemo(() => {
+    if (!selectedCity?.boundingbox) return undefined;
+    return [
+      [parseFloat(selectedCity.boundingbox[0]), parseFloat(selectedCity.boundingbox[2])],
+      [parseFloat(selectedCity.boundingbox[1]), parseFloat(selectedCity.boundingbox[3])],
+    ];
+  }, [selectedCity]);
+
   return (
     <div className="map-container">
       <div className="city-selector">
-        <div className="city-selector-inner">
+        <div className="city-selector-inner" ref={dropdownRef}>
           <MapPin size={18} color="#2563eb" />
-          <select
-            className="city-select"
-            value={selectedCity?.id || ""}
-            onChange={handleCityChange}
-          >
-            {cities.map((city) => (
-              <option key={city.id} value={city.id}>
-                {city.name}
-              </option>
-            ))}
-          </select>
+          <div className="custom-select-container">
+            <button
+              className="custom-select-trigger"
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            >
+              <span>{selectedCity?.name || "Select a City"}</span>
+            </button>
+            {isDropdownOpen && (
+              <div className="custom-select-options">
+                {cities.map((city) => (
+                  <div
+                    key={city.id}
+                    className={`custom-select-option ${
+                      selectedCity?.id === city.id ? "selected" : ""
+                    }`}
+                    onClick={() => handleCitySelect(city)}
+                  >
+                    {city.name}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -117,10 +167,11 @@ const MapContainer = ({ reports, onReportClick, onCityChange }: MapContainerProp
         {selectedCity ? (
           <MapView
             reports={reports}
-            cityCenter={[selectedCity.lat, selectedCity.lng]} 
+            cityCenter={cityCenter}
             cityId={selectedCity.id}
             onReportClick={onReportClick}
             onShowStatsClick={() => setIsStatsModalOpen(true)}
+            maxBounds={maxBounds}
           />
         ) : (
           <div style={{display:'flex', alignItems:'center', justifyContent:'center', height:'100%'}}>

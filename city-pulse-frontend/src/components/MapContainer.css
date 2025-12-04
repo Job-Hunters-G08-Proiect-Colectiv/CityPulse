@@ -25,36 +25,68 @@
   box-shadow: 0 10px 30px rgba(15, 23, 42, 0.35);
   border: 1px solid rgba(148, 163, 184, 0.4);
   backdrop-filter: blur(14px);
+  position: relative;
 }
 
-.city-select {
+.custom-select-container {
+  position: relative;
+}
+
+.custom-select-trigger {
   border: none;
   background: transparent;
   font-size: 0.95rem;
   font-weight: 600;
   color: #0f172a;
-  padding: 4px 0;
+  padding: 4px 32px 4px 4px;
   outline: none;
   cursor: pointer;
   min-width: 140px;
-  text-align-last: center;
-  border-radius: 999px;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.75rem center;
+  background-repeat: no-repeat;
+  background-size: 1.25em 1.25em;
 }
 
-.city-select option {
-  font-weight: 500;
+.custom-select-options {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  padding: 8px;
+  z-index: 1;
+  border: 1px solid #e2e8f0;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.custom-select-option {
+  padding: 10px 16px;
   font-size: 0.95rem;
-  padding: 6px 10px;
+  font-weight: 500;
+  color: #334155;
+  cursor: pointer;
+  border-radius: 12px;
+  transition: background-color 0.2s, color 0.2s;
 }
 
-.city-select:focus {
-  outline: none;
+.custom-select-option:hover {
+  background-color: #f1f5f9;
 }
 
-/* No custom arrow: pill shows only the city name */
+.custom-select-option.selected {
+  background-color: #e0e7ff;
+  color: #4f46e5;
+  font-weight: 600;
+}
 
 @media (max-width: 640px) {
   .city-selector {
@@ -65,7 +97,7 @@
     padding: 6px 14px;
   }
 
-  .city-select {
+  .custom-select-trigger {
     font-size: 0.85rem;
     min-width: 120px;
   }
@@ -80,14 +112,7 @@
   align-items: center;
   justify-content: center;
   color: white;
-  /* padding: 40px; */
 }
-
-/* @media (max-width: 768px) {
-  .map-placeholder {
-    padding: 20px;
-  }
-} */
 
 .map-placeholder h3 {
   font-size: 32px;
