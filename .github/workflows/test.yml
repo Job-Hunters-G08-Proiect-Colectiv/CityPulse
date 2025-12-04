@@ -19,7 +19,7 @@ jobs:
       - name: Install backend dependencies
         run: |
           cd city-pulse-backend
-          npm ci
+          npm install
 
       - name: Run backend tests
         run: |
@@ -30,7 +30,7 @@ jobs:
       - name: Install frontend dependencies
         run: |
           cd city-pulse-frontend
-          npm ci
+          npm install
 
       - name: Run frontend tests
         run: |
