@@ -40,6 +40,7 @@ function App() {
   const prevStatusRef = useRef<Map<number, ReportStatus>>(new Map());
   const [notifications, setNotifications] = useState<UINotification[]>([]);
   const [selectedCityId, setSelectedCityId] = useState<number | null>(null);
+  const [showOutOfBoundsDialog, setShowOutOfBoundsDialog] = useState(false);
 
   // Debounced search effect
   useEffect(() => {
@@ -219,7 +220,13 @@ function App() {
             }
             return true;
           });
-          setReports(filtered);
+          
+          setReports(currentReports => {
+            if (JSON.stringify(currentReports) !== JSON.stringify(filtered)) {
+              return filtered;
+            }
+            return currentReports;
+          });
         }
       } catch (_) {
         // ignore background errors; connectivity is handled by the health ping
@@ -262,12 +269,16 @@ function App() {
       const newReport = await reportService.createReport(createDto);
       setReports([newReport, ...reports]);
       setIsModalOpen(false);
-    } catch (err) {
-      console.error("Error creating report:", err);
-      const message =
-        (err as any)?.response?.data?.error ||
-        "Failed to create report. Please try again.";
-      alert(message);
+    } catch (err: any) {
+      if (err.response?.data?.error === "Location is outside the current city!") {
+        setShowOutOfBoundsDialog(true);
+      } else {
+        console.error("Error creating report:", err);
+        const message =
+          (err as any)?.response?.data?.error ||
+          "Failed to create report. Please try again.";
+        alert(message);
+      }
     }
   };
 
@@ -316,6 +327,21 @@ function App() {
 
   return (
     <div className="app">
+      {showOutOfBoundsDialog && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: "400px", padding: "24px" }}>
+            <h2 style={{ marginTop: 0 }}>Location Error</h2>
+            <p>The report location is outside the selected city. Please choose a location within the city.</p>
+            <button
+              className="submit-button"
+              style={{ width: "100%" }}
+              onClick={() => setShowOutOfBoundsDialog(false)}
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
       <LogoutButton />
       <MapContainer
         reports={reports}

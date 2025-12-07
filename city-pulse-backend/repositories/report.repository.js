@@ -187,7 +187,9 @@ const create = async (reportModel) => {
     ]);
 
     if (validationResult.rows.length === 0) {
-      throw new Error("Location is outside the current city!");
+      const error = new Error("Location is outside the current city!");
+      error.code = 'LOCATION_OUT_OF_BOUNDS';
+      throw error;
     }
 
     // Insert report
