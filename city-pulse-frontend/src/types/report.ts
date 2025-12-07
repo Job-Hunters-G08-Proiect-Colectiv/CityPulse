@@ -40,4 +40,5 @@ export interface Report {
   upvotes: number;
   description?: string;
   createdBy?: number;
+  cityId?: number;
 }
