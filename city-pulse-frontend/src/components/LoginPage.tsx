@@ -1,8 +1,8 @@
-import { useState, type FormEvent } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import axiosInstance from '../config/axios';
-import { API_ENDPOINTS } from '../config/api';
-import './Auth.css';
+import { useState, type FormEvent } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import axiosInstance from "../config/axios";
+import { API_ENDPOINTS } from "../config/api";
+import "./Auth.css";
 
 interface LoginFormData {
   email: string;
@@ -22,15 +22,15 @@ interface LoginResponse {
 function Login() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState<LoginFormData>({
-    email: '',
-    password: ''
+    email: "",
+    password: "",
   });
-  const [error, setError] = useState<string>('');
+  const [error, setError] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setIsLoading(true);
 
     try {
@@ -42,17 +42,14 @@ function Login() {
       const { token, user } = response.data;
 
       // Store authentication data
-      localStorage.setItem('authToken', token);
-      localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem("authToken", token);
+      localStorage.setItem("user", JSON.stringify(user));
 
-      // Redirect based on user type
-      if (user.userType === 'ADMIN') {
-        navigate('/admin/dashboard');
-      } else {
-        navigate('/');
-      }
+      // Redirect all users to the map. Admins can open dashboard from the map.
+      navigate("/");
     } catch (err: any) {
-      const errorMessage = err.response?.data?.error || 'Login failed. Please try again.';
+      const errorMessage =
+        err.response?.data?.error || "Login failed. Please try again.";
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -62,10 +59,10 @@ function Login() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
     // Clear error when user starts typing
-    if (error) setError('');
+    if (error) setError("");
   };
 
   return (
@@ -109,32 +106,38 @@ function Login() {
 
           {error && (
             <div className="error-message">
-              <svg className="error-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <svg
+                className="error-icon"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
               {error}
             </div>
           )}
 
-          <button 
-            type="submit" 
-            className="submit-button"
-            disabled={isLoading}
-          >
+          <button type="submit" className="submit-button" disabled={isLoading}>
             {isLoading ? (
               <>
                 <span className="spinner"></span>
                 Signing in...
               </>
             ) : (
-              'Sign In'
+              "Sign In"
             )}
           </button>
         </form>
 
         <div className="auth-footer">
           <p>
-            Don't have an account?{' '}
+            Don't have an account?{" "}
             <Link to="/signup" className="auth-link">
               Sign up
             </Link>
