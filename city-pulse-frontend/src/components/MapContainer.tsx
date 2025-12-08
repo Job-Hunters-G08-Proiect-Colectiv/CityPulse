@@ -2,6 +2,8 @@ import "./MapContainer.css";
 import MapView from "./MapView";
 import type { Report } from "../types/report";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import { isAdmin } from "../utils/authUtils";
 import Modal from "react-modal";
 import StatisticsDashboard from "./StatsDashboard";
 import { MapPin, X } from "lucide-react";
@@ -35,6 +37,7 @@ const MapContainer = ({
   const [selectedCity, setSelectedCity] = useState<City | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
 
   const handleCitySelect = useCallback(
     async (city: City) => {

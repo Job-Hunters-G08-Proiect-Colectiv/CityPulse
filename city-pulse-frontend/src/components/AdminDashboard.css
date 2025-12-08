@@ -1,5 +1,7 @@
 .admin-dashboard {
-  min-height: 100vh;
+  height: 100vh; /* fixed height so internal scrolling works even if body overflow is hidden */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   background: #f3f4f6;
   padding: 20px;
 }
@@ -10,6 +12,29 @@
   border-radius: 12px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   margin-bottom: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.admin-header-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.btn-view-map {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-view-map:hover {
+  background: #2563eb;
 }
 
 .admin-header h1 {
@@ -85,7 +110,9 @@
   background: white;
   border-radius: 12px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
+  /* allow vertical scrolling when table grows */
+  max-height: 60vh;
+  overflow-y: auto;
 }
 
 .reports-table {

@@ -50,3 +50,49 @@
     font-size: 12px;
   }
 }
+
+/* Inline variant for headers or inline placement (non-fixed) */
+.logout-container.inline {
+  position: static;
+  bottom: auto;
+  left: auto;
+  background: transparent;
+  padding: 0;
+  gap: 8px;
+  box-shadow: none;
+}
+
+.logout-container.inline .user-name {
+  color: #374151;
+  font-weight: 600;
+}
+
+.logout-container.inline .logout-button {
+  padding: 6px 10px;
+  border-radius: 8px;
+}
+
+/* Small admin dashboard button shown next to the floating logout control */
+.admin-dashboard-btn {
+  margin-left: 8px;
+  background: #111827;
+  color: #fff;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.admin-dashboard-btn:hover {
+  background: #0f172a;
+}
+
+@media (max-width: 768px) {
+  .admin-dashboard-btn {
+    margin-left: 6px;
+    padding: 5px 8px;
+    font-size: 12px;
+  }
+}

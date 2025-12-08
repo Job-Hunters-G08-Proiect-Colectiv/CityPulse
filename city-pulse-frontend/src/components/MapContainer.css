@@ -15,6 +15,28 @@
   z-index: 2000;
 }
 
+.admin-dashboard-button-wrapper {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  z-index: 2200;
+}
+
+.admin-dashboard-button {
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: #111827;
+  color: #fff;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(17,24,39,0.25);
+}
+
+.admin-dashboard-button:hover {
+  background: #0f172a;
+}
+
 .city-selector-inner {
   display: flex;
   align-items: center;
