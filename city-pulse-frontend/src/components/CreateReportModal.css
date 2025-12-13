@@ -396,3 +396,41 @@ form {
 .address-suggestions li:hover {
   background: #f0f7ff;
 }
+
+.selected-location-preview {
+  margin-top: 12px;
+  background-color: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.preview-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: white;
+  border-radius: 50%;
+  padding: 4px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.preview-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.preview-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #15803d;
+}
+
+.preview-coords {
+  font-size: 0.8rem;
+  color: #166534;
+  font-family: monospace;
+}

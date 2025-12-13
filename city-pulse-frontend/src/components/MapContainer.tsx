@@ -23,12 +23,14 @@ interface MapContainerProps {
   reports: Report[];
   onReportClick: (report: Report) => void;
   onCityChange?: (cityId: number | null) => void;
+  onMapClick?: (lat: number, lng: number) => void;
 }
 
 const MapContainer = ({
   reports,
   onReportClick,
   onCityChange,
+  onMapClick,
 }: MapContainerProps) => {
   const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
   const [mapKey, setMapKey] = useState(0);
@@ -209,6 +211,7 @@ const MapContainer = ({
           onReportClick={onReportClick}
           onShowStatsClick={() => setIsStatsModalOpen(true)}
           maxBounds={maxBounds}
+          onMapClick={onMapClick}
         />
       </div>
 

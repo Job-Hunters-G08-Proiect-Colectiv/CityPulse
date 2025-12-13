@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { X } from "lucide-react";
+import { X, MapPin, CheckCircle } from "lucide-react";
 import type { Report, ReportCategory, SeverityLevel } from "../types/report";
 import "./CreateReportModal.css";
 import { getImageUrl } from "../utils/imageUtils";
@@ -8,6 +8,8 @@ interface CreateReportModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: Omit<Report, "id" | "date" | "status" | "upvotes">) => void;
+  onPickLocation?: (currentData: any) => void;
+  initialData?: any;
 }
 
 interface NominatimResult {
@@ -29,6 +31,8 @@ const CreateReportModal = ({
   isOpen,
   onClose,
   onSubmit,
+  onPickLocation,
+  initialData,
 }: CreateReportModalProps) => {
   const [formData, setFormData] = useState({
     name: "",
@@ -42,10 +46,18 @@ const CreateReportModal = ({
   const [addressSuggestions, setAddressSuggestions] = useState<
     NominatimResult[]
   >([]);
-  const [locationMode, setLocationMode] = useState<"address" | "coordinates">(
+  const [locationMode, setLocationMode] = useState<"address" | "coordinates" | "map">(
     "address"
   );
   const [geocodingError, setGeocodingError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (initialData) {
+      setFormData(initialData.formData);
+      setImages(initialData.images);
+      setLocationMode(initialData.locationMode || "address");
+    }
+  }, [initialData]);
 
   useEffect(() => {
     if (formData.address.length > 2) {
@@ -112,7 +124,7 @@ const CreateReportModal = ({
         return;
       }
     }
-    if (locationMode === "coordinates") {
+    if (locationMode === "coordinates" || locationMode === "map") {
       submissionData.address = `${submissionData.location.lat}, ${submissionData.location.lng}`;
     }
     onSubmit({ ...submissionData, images });
@@ -274,6 +286,20 @@ const CreateReportModal = ({
                   />
                   Coordinates
                 </label>
+                <label
+                  style={{ display: "flex", alignItems: "center", gap: "6px" }}
+                >
+                  <input
+                    type="radio"
+                    name="locationMode"
+                    checked={locationMode === "map"}
+                    onChange={() => {
+                      setLocationMode("map");
+                      setFormData({ ...formData, location: { lat: 0, lng: 0 } });
+                    }}
+                  />
+                  Map
+                </label>
               </div>
 
               {locationMode === "address" && (
@@ -350,6 +376,41 @@ const CreateReportModal = ({
                       required
                     />
                   </div>
+                </>
+              )}
+
+              {locationMode === "map" && (
+                <>
+                  <div className="form-hint">
+                    Click the button below to select a location on the main map.
+                  </div>
+                  <button
+                    type="button"
+                    className="submit-button"
+                    style={{ width: "100%", marginTop: "10px", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
+                    onClick={() => {
+                      if (onPickLocation) {
+                        onPickLocation({ formData, images, locationMode });
+                      }
+                    }}
+                  >
+                    <MapPin size={18} />
+                    Select on Map
+                  </button>
+                  {formData.location.lat !== 0 && (
+                    <div className="selected-location-preview">
+                      <div className="preview-icon">
+                        <CheckCircle size={20} color="#10b981" />
+                      </div>
+                      <div className="preview-details">
+                        <span className="preview-label">Location Selected</span>
+                        <span className="preview-coords">
+                          {formData.location.lat.toFixed(6)},{" "}
+                          {formData.location.lng.toFixed(6)}
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </>
               )}
             </div>

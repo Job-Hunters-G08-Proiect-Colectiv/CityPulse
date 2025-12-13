@@ -41,6 +41,8 @@ function App() {
   const [notifications, setNotifications] = useState<UINotification[]>([]);
   const [selectedCityId, setSelectedCityId] = useState<number | null>(null);
   const [showOutOfBoundsDialog, setShowOutOfBoundsDialog] = useState(false);
+  const [isPickingLocation, setIsPickingLocation] = useState(false);
+  const [draftReportData, setDraftReportData] = useState<any>(null);
 
   // Debounced search effect
   useEffect(() => {
@@ -283,7 +285,28 @@ function App() {
   };
 
   const handleReportClick = (report: Report) => {
+    if (isPickingLocation) return;
     setSelectedReport(report);
+  };
+
+  const handleMapClick = (lat: number, lng: number) => {
+    if (isPickingLocation) {
+      setDraftReportData({
+        ...draftReportData,
+        formData: {
+          ...draftReportData.formData,
+          location: { lat, lng },
+        },
+      });
+      setIsPickingLocation(false);
+      setIsModalOpen(true);
+    }
+  };
+
+  const handlePickLocation = (currentData: any) => {
+    setDraftReportData(currentData);
+    setIsModalOpen(false);
+    setIsPickingLocation(true);
   };
 
   const handleUpvote = (reportId: number, newCount: number) => {
@@ -347,7 +370,47 @@ function App() {
         reports={reports}
         onReportClick={handleReportClick}
         onCityChange={setSelectedCityId}
+        onMapClick={handleMapClick}
       />
+
+      {isPickingLocation && (
+        <div
+          style={{
+            position: "fixed",
+            top: "20px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            backgroundColor: "rgba(0, 0, 0, 0.8)",
+            color: "white",
+            padding: "12px 24px",
+            borderRadius: "8px",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            gap: "12px",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+          }}
+        >
+          <span>Click on the map to select a location</span>
+          <button
+            onClick={() => {
+              setIsPickingLocation(false);
+              setIsModalOpen(true);
+            }}
+            style={{
+              background: "white",
+              color: "black",
+              border: "none",
+              padding: "4px 12px",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontWeight: "bold",
+            }}
+          >
+            Cancel
+          </button>
+        </div>
+      )}
 
       {/* Show refreshing indicator without unmounting UI */}
       {isRefreshing && (
@@ -393,8 +456,13 @@ function App() {
       />
       <CreateReportModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          setDraftReportData(null);
+        }}
         onSubmit={handleCreateReport}
+        onPickLocation={handlePickLocation}
+        initialData={draftReportData}
       />
       <ReportDetailModal
         report={selectedReport}
