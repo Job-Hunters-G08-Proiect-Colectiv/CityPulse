@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import ReportList from "./components/ReportList";
 import CreateReportModal from "./components/CreateReportModal";
 import ReportDetailModal from "./components/ReportDetailModal";
@@ -40,9 +40,20 @@ function App() {
   const prevStatusRef = useRef<Map<number, ReportStatus>>(new Map());
   const [notifications, setNotifications] = useState<UINotification[]>([]);
   const [selectedCityId, setSelectedCityId] = useState<number | null>(null);
+  const [selectedCityName, setSelectedCityName] = useState<string>("");
   const [showOutOfBoundsDialog, setShowOutOfBoundsDialog] = useState(false);
   const [isPickingLocation, setIsPickingLocation] = useState(false);
   const [draftReportData, setDraftReportData] = useState<any>(null);
+
+  const handleCityChange = useCallback((city: { id: number; name: string } | null) => {
+    if (city) {
+      setSelectedCityId(city.id);
+      setSelectedCityName(city.name);
+    } else {
+      setSelectedCityId(null);
+      setSelectedCityName("");
+    }
+  }, []);
 
   // Debounced search effect
   useEffect(() => {
@@ -369,7 +380,7 @@ function App() {
       <MapContainer
         reports={reports}
         onReportClick={handleReportClick}
-        onCityChange={setSelectedCityId}
+        onCityChange={handleCityChange}
         onMapClick={handleMapClick}
       />
 
@@ -463,6 +474,7 @@ function App() {
         onSubmit={handleCreateReport}
         onPickLocation={handlePickLocation}
         initialData={draftReportData}
+        cityName={selectedCityName}
       />
       <ReportDetailModal
         report={selectedReport}

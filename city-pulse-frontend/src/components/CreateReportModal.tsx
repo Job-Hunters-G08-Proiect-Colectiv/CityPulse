@@ -10,6 +10,7 @@ interface CreateReportModalProps {
   onSubmit: (data: Omit<Report, "id" | "date" | "status" | "upvotes">) => void;
   onPickLocation?: (currentData: any) => void;
   initialData?: any;
+  cityName?: string;
 }
 
 interface NominatimResult {
@@ -33,6 +34,7 @@ const CreateReportModal = ({
   onSubmit,
   onPickLocation,
   initialData,
+  cityName,
 }: CreateReportModalProps) => {
   const [formData, setFormData] = useState({
     name: "",
@@ -64,8 +66,9 @@ const CreateReportModal = ({
       const delayDebounceFn = setTimeout(() => {
         const fetchSuggestions = async () => {
           try {
+            const query = cityName ? `${formData.address}, ${cityName}` : formData.address;
             const response = await fetch(
-              `https://nominatim.openstreetmap.org/search?q=${formData.address}&format=json&limit=5`
+              `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=5`
             );
             const data = await response.json();
             setAddressSuggestions(data);
@@ -96,9 +99,10 @@ const CreateReportModal = ({
           submissionData.location.lat !== 0 ||
           submissionData.location.lng !== 0;
         if (!hasCoords) {
+          const query = cityName ? `${submissionData.address}, ${cityName}` : submissionData.address;
           const resp = await fetch(
             `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-              submissionData.address
+              query
             )}&limit=1`
           );
           const results: NominatimResult[] = await resp.json();
