@@ -20,6 +20,7 @@ import MarkerClusterGroup from "react-leaflet-markercluster";
 import { useEffect, useRef, useState, useMemo } from "react";
 import { severityToIntensity, type Report } from "../types/report";
 import { getImageUrl } from "../utils/imageUtils";
+import { memo } from 'react';
 import {
   getSeverityColor,
   getIconSize,
@@ -130,13 +131,10 @@ const createCustomIcon = (report: Report) => {
 
   const glowStyle =
     glowRadius > 0
-      ? `filter: drop-shadow(0 0 ${
-          glowRadius * 0.2
-        }px ${color}) drop-shadow(0 0 ${
-          glowRadius * 0.4
-        }px ${color}) drop-shadow(0 0 ${
-          glowRadius * 0.7
-        }px ${color}) drop-shadow(0 0 ${glowRadius}px ${color});`
+      ? `filter: drop-shadow(0 0 ${glowRadius * 0.2
+      }px ${color}) drop-shadow(0 0 ${glowRadius * 0.4
+      }px ${color}) drop-shadow(0 0 ${glowRadius * 0.7
+      }px ${color}) drop-shadow(0 0 ${glowRadius}px ${color});`
       : "";
 
   const html = `
@@ -149,9 +147,8 @@ const createCustomIcon = (report: Report) => {
       align-items: center;
       justify-content: center;
     ">
-      <svg width="${iconSize * 1.8}" height="${
-    iconSize * 1.8
-  }" viewBox="0 0 24 32" fill="none" xmlns="http://www.w3.org/2000/svg"
+      <svg width="${iconSize * 1.8}" height="${iconSize * 1.8
+    }" viewBox="0 0 24 32" fill="none" xmlns="http://www.w3.org/2000/svg"
            style="position: absolute; z-index: 1;">
         <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" 
               fill="${color}" 
@@ -350,7 +347,7 @@ const MapView = ({
       id="map"
       zoomControl={false}
       doubleClickZoom={false}
-      // maxBounds removed from here to allow MapController to manage it
+    // maxBounds removed from here to allow MapController to manage it
     >
       <MapController center={cityCenter} maxBounds={maxBounds} />
       <TileLayer
@@ -395,56 +392,71 @@ const MapView = ({
         <HeatmapLayer points={heatPoints} />
       ) : (
         <MarkerClusterGroup key={cityId ?? "default-city"}>
-          {uniqueReports.map((report) => (
-            <Marker
-              key={report.id}
-              position={[report.location.lat, report.location.lng]}
-              icon={createCustomIcon(report)}
-              ref={(ref) => void (markerRefs.current[report.id] = ref)}
-              eventHandlers={{
-                mouseover: () => handleMarkerMouseOver(report.id),
-                mouseout: () => handleMarkerMouseOut(report.id),
-                click: () => onReportClick(report),
-              }}
-            >
-              <Popup maxWidth={300} minWidth={250}>
-                <div
-                  style={{ padding: "8px" }}
-                  onClick={(e) => e.stopPropagation()}
-                  onMouseEnter={handlePopupMouseEnter}
-                  onMouseLeave={() => handlePopupMouseLeave(report.id)}
+          {useMemo(
+            () =>
+              uniqueReports.map((report) => (
+                <Marker
+                  key={report.id}
+                  position={[report.location.lat, report.location.lng]}
+                  icon={createCustomIcon(report)}
+                  ref={(ref) => void (markerRefs.current[report.id] = ref)}
+                  eventHandlers={{
+                    mouseover: () => handleMarkerMouseOver(report.id),
+                    mouseout: () => handleMarkerMouseOut(report.id),
+                    click: () => onReportClick(report),
+                  }}
                 >
-                  <b style={{ fontSize: "16px" }}>{report.name}</b>
-                  <br />
-                  <span style={{ fontSize: "14px", color: "#666" }}>
-                    Category: {report.category}
-                  </span>
-                  <br />
-                  <span style={{ fontSize: "14px", color: "#666" }}>
-                    Severity: {report.severityLevel}
-                  </span>
-                  <br />
+                  <Popup maxWidth={300} minWidth={250}>
+                    <div
+                      style={{ padding: "8px" }}
+                      onClick={(e) => e.stopPropagation()}
+                      onMouseEnter={handlePopupMouseEnter}
+                      onMouseLeave={() => handlePopupMouseLeave(report.id)}
+                    >
+                      <b style={{ fontSize: "16px" }}>{report.name}</b>
+                      <br />
+                      <span style={{ fontSize: "14px", color: "#666" }}>
+                        Category: {report.category}
+                      </span>
+                      <br />
+                      <span style={{ fontSize: "14px", color: "#666" }}>
+                        Severity: {report.severityLevel}
+                      </span>
+                      <br />
 
-                  <ReportMedia report={report} />
+                      <ReportMedia report={report} />
 
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "5px",
-                      marginTop: "8px",
-                    }}
-                  >
-                    <ThumbsUp size={16} /> {report.upvotes}
-                  </div>
-                </div>
-              </Popup>
-            </Marker>
-          ))}
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "5px",
+                          marginTop: "8px",
+                        }}
+                      >
+                        <ThumbsUp size={16} /> {report.upvotes}
+                      </div>
+                    </div>
+                  </Popup>
+                </Marker>
+              )),
+            [uniqueReports]
+          )}
         </MarkerClusterGroup>
       )}
     </MapContainer>
   );
 };
 
-export default MapView;
+export default memo(MapView, (prevProps, nextProps) => {
+  // Only re-render if reports actually changed (deep comparison of IDs)
+  const prevIds = prevProps.reports.map(r => r.id).sort().join(',');
+  const nextIds = nextProps.reports.map(r => r.id).sort().join(',');
+
+  return (
+    prevIds === nextIds &&
+    prevProps.cityCenter[0] === nextProps.cityCenter[0] &&
+    prevProps.cityCenter[1] === nextProps.cityCenter[1] &&
+    prevProps.cityId === nextProps.cityId
+  );
+});

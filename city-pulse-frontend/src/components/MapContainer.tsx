@@ -31,7 +31,6 @@ const MapContainer = ({
   onCityChange,
 }: MapContainerProps) => {
   const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
-  const [mapKey, setMapKey] = useState(0);
 
   const [cities, setCities] = useState<City[]>([]);
   const [selectedCity, setSelectedCity] = useState<City | null>(null);
@@ -102,13 +101,6 @@ const MapContainer = ({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
-  useEffect(() => {
-    if (!isStatsModalOpen) {
-      const timer = setTimeout(() => setMapKey((prevKey) => prevKey + 1), 10);
-      return () => clearTimeout(timer);
-    }
-  }, [isStatsModalOpen]);
 
   const modalStyles: Modal.Styles = {
     overlay: {
@@ -187,9 +179,8 @@ const MapContainer = ({
                 {cities.map((city) => (
                   <div
                     key={city.id}
-                    className={`custom-select-option ${
-                      selectedCity.id === city.id ? "selected" : ""
-                    }`}
+                    className={`custom-select-option ${selectedCity.id === city.id ? "selected" : ""
+                      }`}
                     onClick={() => handleCitySelect(city)}
                   >
                     {city.name}
@@ -201,7 +192,7 @@ const MapContainer = ({
         </div>
       </div>
 
-      <div className="map-placeholder" key={mapKey}>
+      <div className="map-placeholder">
         <MapView
           reports={reports}
           cityCenter={cityCenter}
