@@ -5,6 +5,7 @@ import {
   Popup,
   ZoomControl,
   useMap,
+  useMapEvents,
 } from "react-leaflet";
 import {
   ThumbsUp,
@@ -34,6 +35,16 @@ interface MapViewProps {
   onShowStatsClick: () => void;
   cityId?: number | null;
   maxBounds?: LatLngBoundsExpression;
+  onMapClick?: (lat: number, lng: number) => void;
+}
+
+function MapClickHandler({ onMapClick }: { onMapClick?: (lat: number, lng: number) => void }) {
+  useMapEvents({
+    click: (e) => {
+      if (onMapClick) onMapClick(e.latlng.lat, e.latlng.lng);
+    },
+  });
+  return null;
 }
 
 function MapController({
@@ -283,6 +294,7 @@ const MapView = ({
   onShowStatsClick,
   cityId,
   maxBounds,
+  onMapClick,
 }: MapViewProps) => {
   const uniqueReports = useMemo(
     () => Array.from(new Map(reports.map((r) => [r.id, r])).values()),
@@ -352,6 +364,7 @@ const MapView = ({
       doubleClickZoom={false}
       // maxBounds removed from here to allow MapController to manage it
     >
+      <MapClickHandler onMapClick={onMapClick} />
       <MapController center={cityCenter} maxBounds={maxBounds} />
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

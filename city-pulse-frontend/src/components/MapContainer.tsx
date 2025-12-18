@@ -22,13 +22,15 @@ interface City {
 interface MapContainerProps {
   reports: Report[];
   onReportClick: (report: Report) => void;
-  onCityChange?: (cityId: number | null) => void;
+  onCityChange?: (city: City | null) => void;
+  onMapClick?: (lat: number, lng: number) => void;
 }
 
 const MapContainer = ({
   reports,
   onReportClick,
   onCityChange,
+  onMapClick,
 }: MapContainerProps) => {
   const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
   const [mapKey, setMapKey] = useState(0);
@@ -38,6 +40,7 @@ const MapContainer = ({
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const initializedRef = useRef(false);
 
   const handleCitySelect = useCallback(
     async (city: City) => {
@@ -60,7 +63,7 @@ const MapContainer = ({
 
       setSelectedCity(cityWithBounds);
       if (onCityChange) {
-        onCityChange(city.id);
+        onCityChange(cityWithBounds);
       }
       setIsDropdownOpen(false);
     },
@@ -69,6 +72,8 @@ const MapContainer = ({
 
   // Fetch cities, one time
   useEffect(() => {
+    if (initializedRef.current) return;
+
     const fetchCities = async () => {
       try {
         const res = await fetch("http://localhost:3000/api/cities");
@@ -81,6 +86,7 @@ const MapContainer = ({
             data[0];
           // Set initial city without triggering a new report fetch
           handleCitySelect(preferred);
+          initializedRef.current = true;
         }
       } catch (err) {
         console.error("Failed to fetch cities", err);
@@ -209,6 +215,7 @@ const MapContainer = ({
           onReportClick={onReportClick}
           onShowStatsClick={() => setIsStatsModalOpen(true)}
           maxBounds={maxBounds}
+          onMapClick={onMapClick}
         />
       </div>
 
