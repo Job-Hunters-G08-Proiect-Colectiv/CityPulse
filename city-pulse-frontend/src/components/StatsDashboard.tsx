@@ -23,8 +23,9 @@ interface SeverityStats {
   count: number;
 }
 
-// Assuming cityId '1' for Cluj-Napoca. You might pass this as a prop.
-const CITY_ID = 1;
+interface StatisticsDashboardProps {
+  cityId: number;
+}
 
 async function fetchApi<T>(url: string): Promise<T> {
   const response = await fetch(url);
@@ -37,7 +38,7 @@ async function fetchApi<T>(url: string): Promise<T> {
   }
   return result.data as T;
 }
-const StatisticsDashboard = () => {
+const StatisticsDashboard = ({ cityId }: StatisticsDashboardProps) => {
   const [overview, setOverview] = useState<OverviewStats | null>(null);
   const [districtStats, setDistrictStats] = useState<DistrictStats[]>([]);
   const [categoryStats, setCategoryStats] = useState<CategoryStats[]>([]);
@@ -49,12 +50,13 @@ const StatisticsDashboard = () => {
     const fetchAllData = async () => {
       try {
         setLoading(true);
+        const qs = `?cityId=${encodeURIComponent(String(cityId))}`;
         const [overviewData, districtData, categoryData, severityData] =
           await Promise.all([
-            fetchApi<OverviewStats>("/api/statistics/overview"),
-            fetchApi<DistrictStats[]>(`/api/statistics/by-district/${CITY_ID}`),
-            fetchApi<CategoryStats[]>("/api/statistics/by-category"),
-            fetchApi<SeverityStats[]>("/api/statistics/by-severity"),
+            fetchApi<OverviewStats>(`/api/statistics/overview${qs}`),
+            fetchApi<DistrictStats[]>(`/api/statistics/by-district/${cityId}`),
+            fetchApi<CategoryStats[]>(`/api/statistics/by-category${qs}`),
+            fetchApi<SeverityStats[]>(`/api/statistics/by-severity${qs}`),
           ]);
 
         setOverview(overviewData);
@@ -71,7 +73,7 @@ const StatisticsDashboard = () => {
     };
 
     fetchAllData();
-  }, []);
+  }, [cityId]);
 
   if (loading) {
     return <div style={{ padding: "20px" }}>Loading statistics...</div>;

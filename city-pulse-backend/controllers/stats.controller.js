@@ -2,7 +2,8 @@ const statisticsService = require("../services/stats.service");
 
 exports.getOverview = async (req, res) => {
   try {
-    const data = await statisticsService.getOverview();
+    const cityId = req.query.cityId ? Number(req.query.cityId) : undefined;
+    const data = await statisticsService.getOverview(cityId);
     res.json({ success: true, data });
   } catch (error) {
     console.error("Error fetching overview stats:", error);
@@ -24,7 +25,8 @@ exports.getByDistrict = async (req, res) => {
 
 exports.getByCategory = async (req, res) => {
   try {
-    const data = await statisticsService.getByCategory();
+    const cityId = req.query.cityId ? Number(req.query.cityId) : undefined;
+    const data = await statisticsService.getByCategory(cityId);
     res.json({ success: true, data });
   } catch (error) {
     console.error("Error fetching category stats:", error);
@@ -34,7 +36,8 @@ exports.getByCategory = async (req, res) => {
 
 exports.getBySeverity = async (req, res) => {
   try {
-    const data = await statisticsService.getBySeverity();
+    const cityId = req.query.cityId ? Number(req.query.cityId) : undefined;
+    const data = await statisticsService.getBySeverity(cityId);
     res.json({ success: true, data });
   } catch (error) {
     console.error("Error fetching severity stats:", error);

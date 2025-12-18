@@ -243,7 +243,7 @@ const MapContainer = ({
           </div>
 
           <div style={{ overflowY: "auto", flexGrow: 1 }}>
-            <StatisticsDashboard />
+            <StatisticsDashboard cityId={selectedCity.id} />
           </div>
         </div>
       </Modal>
