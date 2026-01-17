@@ -1,0 +1,92 @@
+const reportRepository = require('../repositories/report.repository');
+const { Report, CATEGORIES, SEVERITIES, STATUSES } = require('../domain/report.domain');
+
+const getAllReports = async (filters = {}) => {
+    return await reportRepository.findAll(filters);
+};
+
+const getReportById = async (id) => {
+    const report = await reportRepository.findById(id);
+
+    if (!report) {
+        throw new Error('Report not found');
+    }
+    return report;
+};
+
+const updateReport = async (id, dataToUpdate) => {
+    console.log(`Service: Actualizez sesizarea ${id}`);
+
+    if (dataToUpdate.status && !STATUSES.includes(dataToUpdate.status)) {
+        throw new Error(`Invalid status. Must be one of: ${STATUSES.join(', ')}`);
+    }
+    if (dataToUpdate.category && !CATEGORIES.includes(dataToUpdate.category)) {
+        throw new Error(`Invalid category. Must be one of: ${CATEGORIES.join(', ')}`);
+    }
+    if (dataToUpdate.severityLevel && !SEVERITIES.includes(dataToUpdate.severityLevel)) {
+        throw new Error(`Invalid severity level. Must be one of: ${SEVERITIES.join(', ')}`);
+    }
+
+    if (dataToUpdate.address !== undefined && dataToUpdate.address.trim() === "") {
+        throw new Error('Address is required.');
+    }
+    if (dataToUpdate.images && !Array.isArray(dataToUpdate.images)) {
+        throw new Error('Images variable must be an array!');
+    }
+
+    const updatedReport = await reportRepository.updateById(id, dataToUpdate);
+
+    if (!updatedReport) {
+        throw new Error('Report not found');
+    }
+    return updatedReport;
+};
+
+const addNewReport = async (reportData, userId) => {
+    console.log('Service: Adding and verifying new report');
+    const { name, location, category, severityLevel, address, images, description } = reportData;
+    
+    if (!name || name.trim() === "") {
+        throw new Error('New report name required.');
+    }
+    if (!location || !location.lat || !location.lng) {
+        throw new Error('New report location required.');
+    }
+    if (!category || !CATEGORIES.includes(category)) {
+        throw new Error(`Invalid category. Must be one of: ${CATEGORIES.join(', ')}`);
+    }
+    if (!severityLevel || !SEVERITIES.includes(severityLevel)) {
+        throw new Error(`Severity level invalid. Must be one of: ${SEVERITIES.join(', ')}`);
+    }
+    if (!address || address.trim() === "") {
+        throw new Error('Address is a required field.');
+    }
+    if (images && !Array.isArray(images)) {
+        throw new Error('Images variable should be an array!');
+    }
+    
+    const reportModel = new Report(name, location, category, severityLevel, address, images, description, userId);
+    // attach cityId if provided from client (optional)
+    if (reportData.cityId) {
+        reportModel.cityId = reportData.cityId;
+    }
+
+    return await reportRepository.create(reportModel);
+};
+
+const deleteReport = async (id) => {
+    console.log(`Service: Deleting report ${id}`);
+    const success = await reportRepository.deleteById(id);
+    if (!success) {
+        throw new Error('Report not found'); 
+    }
+    return success;
+};
+
+module.exports = {
+    getAllReports,
+    addNewReport,
+    deleteReport,
+    getReportById,
+    updateReport
+};

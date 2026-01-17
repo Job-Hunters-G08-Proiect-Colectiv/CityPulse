@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="5" failures="0" errors="0" time="3.221">
+    <testsuite name="src/__tests__/App.smoke.test.tsx" timestamp="2025-10-30T15:16:07.950Z" hostname="Codrut" tests="1" failures="0" errors="0" skipped="0" time="0.5571489">
+        <testcase classname="src/__tests__/App.smoke.test.tsx" name="App (smoke) &gt; renders without showing network error when health ok" time="0.5555775">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/__tests__/NetworkErrorModal.test.tsx" timestamp="2025-10-30T15:16:07.952Z" hostname="Codrut" tests="2" failures="0" errors="0" skipped="0" time="0.1825198">
+        <testcase classname="src/__tests__/NetworkErrorModal.test.tsx" name="NetworkErrorModal &gt; does not render when closed" time="0.025598">
+        </testcase>
+        <testcase classname="src/__tests__/NetworkErrorModal.test.tsx" name="NetworkErrorModal &gt; renders title and retry button when open and triggers onRetry" time="0.1548736">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/__tests__/reportService.test.ts" timestamp="2025-10-30T15:16:07.956Z" hostname="Codrut" tests="2" failures="0" errors="0" skipped="0" time="0.0081765">
+        <testcase classname="src/__tests__/reportService.test.ts" name="reportService &gt; calls GET /api/reports and returns parsed json" time="0.0053029">
+        </testcase>
+        <testcase classname="src/__tests__/reportService.test.ts" name="reportService &gt; appends filters as query params" time="0.0016196">
+        </testcase>
+    </testsuite>
+</testsuites>

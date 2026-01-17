@@ -1,11 +1,9 @@
-const express = require('express');
-const app = express();
-const PORT = 3000;
+// server entrypoint
+require('dotenv').config();
 
-app.get('/', (req, res) => {
-    res.send('Hello World!');
-});
+const app = require('./server');
+const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-    console.log(`Server is listening on port ${PORT}`);
+    console.log(`CityPulse Server listening on port ${PORT}`);
 });
