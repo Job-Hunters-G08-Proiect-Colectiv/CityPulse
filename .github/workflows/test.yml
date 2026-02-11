@@ -1,11 +1,16 @@
-name: Run Tests ( Logging Only )
+name: CI
+
+permissions:
+  issues: write
+  pull-requests: write
 
 on:
   push:
   pull_request:
 
 jobs:
-  test:
+  ci:
+    name: Lint and Tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -21,19 +26,43 @@ jobs:
           cd city-pulse-backend
           npm install
 
+      - name: Run backend lint
+        run: |
+          cd city-pulse-backend
+          npm run lint
+
       - name: Run backend tests
         run: |
           cd city-pulse-backend
-          npm test || true
-        continue-on-error: true
+          npm test
 
       - name: Install frontend dependencies
         run: |
           cd city-pulse-frontend
           npm install
 
+      - name: Run frontend lint
+        run: |
+          cd city-pulse-frontend
+          npm run lint
+
       - name: Run frontend tests
         run: |
           cd city-pulse-frontend
-          npm test || true
-        continue-on-error: true
+          npm test
+      - name: Comment on PR with failure details
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const pr = context.payload.pull_request;
+            if (!pr) return;
+            const runUrl = `${process.env.GITHUB_SERVER_URL}/${context.repo.owner}/${context.repo.repo}/actions/runs/${process.env.GITHUB_RUN_ID}`;
+            const body = `:x: CI checks failed for this pull request.\n\n**What failed:** Lint and/or tests failed in the \'CI\' workflow.\n\n**Workflow run:** ${runUrl}\n\n**How to reproduce locally:**\n\n\`\`\`bash\n# backend\ncd city-pulse-backend\nnpm install\nnpm run lint\nnpm test\n\n# frontend\ncd city-pulse-frontend\nnpm install\nnpm run lint\nnpm test\n\`\`\`\n\nPlease fix the errors and push again. Branch protection requires the \`CI\` check to pass before merging.`;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number,
+              body
+            });

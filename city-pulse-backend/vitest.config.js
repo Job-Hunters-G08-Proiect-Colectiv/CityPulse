@@ -1,19 +1,13 @@
-import { defineConfig } from 'vitest/config';
+const { defineConfig } = require("vitest/config");
 
-export default defineConfig({
+module.exports = defineConfig({
   test: {
-    environment: 'node',
+    environment: "node",
     globals: true,
-    reporters: [
-      'default',
-      'html',
-      'junit'
-    ],
+    reporters: ["default", "html", "junit"],
     outputFile: {
-      html: './test-report.html',
-      junit: './test-results.xml'
-    }
+      html: "./test-report.html",
+      junit: "./test-results.xml",
+    },
   },
 });
-
-
